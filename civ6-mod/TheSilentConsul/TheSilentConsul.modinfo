@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod id="37b6e9ff-22b6-4b34-b1db-78f55d61aa2a" version="0.1">
+  <Properties>
+    <Name>The Silent Consul</Name>
+    <Teaser>Quiet in-game AI assistant overlay prototype for Civilization VI.</Teaser>
+    <Description>Initial in-game UI context prototype for Project Obelisk / The Silent Consul.</Description>
+    <Authors>zyfay518, Codex</Authors>
+    <CompatibleVersions>1.2,2.0</CompatibleVersions>
+  </Properties>
+  <InGameActions>
+    <AddUserInterfaces id="SilentConsulInGameUI">
+      <Properties>
+        <Context>InGame</Context>
+      </Properties>
+      <File>UI/SilentConsul.xml</File>
+    </AddUserInterfaces>
+  </InGameActions>
+  <Files>
+    <File>UI/SilentConsul.xml</File>
+    <File>UI/SilentConsul.lua</File>
+  </Files>
+</Mod>

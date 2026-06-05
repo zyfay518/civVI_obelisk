@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context Name="SilentConsul">
+  <Container ID="SilentConsulRoot" Anchor="C,T" Offset="0,48" Size="560,260" ConsumeMouse="0">
+    <Container ID="IdlePanel" Anchor="C,T" Size="420,58" ConsumeMouse="1">
+      <Image ID="IdleBackground" Anchor="C,C" Size="420,58" Color="80,92,84,130" />
+      <TextButton ID="AskButton" Anchor="C,C" Size="400,44" String="Ask anything..." FontSize="22" />
+    </Container>
+
+    <Container ID="ExpandedPanel" Anchor="C,T" Offset="0,68" Size="560,188" ConsumeMouse="1" Hidden="1">
+      <Image ID="AnswerBackground" Anchor="C,C" Size="560,188" Color="225,229,210,210" />
+      <Label ID="QuestionLabel" Anchor="L,T" Offset="22,16" Size="500,28" String="How can I increase my science output?" FontSize="20" Color="255,255,255,255" />
+      <Label ID="AnswerLabel" Anchor="L,T" Offset="22,58" Size="510,112" Wrap="1" FontSize="17" Color="28,24,18,255"
+        String="Your science is behind mainly because your research base is still thin: too few Campuses, no Libraries yet, and limited population. First inspect city panels, Campus districts, and Library gaps." />
+      <TextButton ID="CollapseButton" Anchor="R,T" Offset="-12,12" Size="36,30" String="X" FontSize="16" />
+    </Container>
+  </Container>
+</Context>
