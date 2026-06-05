@@ -1,0 +1,25 @@
+{
+  "turn": 82,
+  "era": "Classical",
+  "player": {
+    "civilization": "Kongo",
+    "science_per_turn": 31,
+    "culture_per_turn": 24,
+    "gold_per_turn": 12,
+    "city_count": 5,
+    "total_population": 22
+  },
+  "known_context": {
+    "known_player_average_science": 47,
+    "estimated_techs_behind": 4
+  },
+  "cities": [
+    {
+      "name": "Mbanza Kongo",
+      "population": 3,
+      "districts": [],
+      "buildings": [],
+      "science_per_turn": 2.1
+    }
+  ]
+}

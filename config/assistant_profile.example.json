@@ -1,0 +1,14 @@
+{
+  "mode": "oracle",
+  "tone": "quiet_consul",
+  "answer_length": "standard",
+  "advice_level": "soft_suggest",
+  "structure": [
+    "conclusion",
+    "reasons",
+    "evidence",
+    "where_to_check"
+  ],
+  "language": "zh-CN",
+  "auto_collapse_seconds": 8
+}
