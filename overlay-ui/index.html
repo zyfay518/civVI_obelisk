@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Silent Consul Overlay Mock</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="game-shell" aria-label="Civilization VI overlay mock">
+      <section class="map-scene" aria-hidden="true">
+        <div class="coast"></div>
+        <div class="river"></div>
+        <div class="city city-primary">
+          <span class="city-label">MBANZA KONGO</span>
+          <span class="city-pop">3</span>
+        </div>
+        <div class="hex hex-a"></div>
+        <div class="hex hex-b"></div>
+        <div class="hex hex-c"></div>
+        <div class="forest forest-a"></div>
+        <div class="forest forest-b"></div>
+        <div class="hill hill-a"></div>
+      </section>
+
+      <section class="consul" data-state="idle" aria-label="The Silent Consul">
+        <form class="ask-form" id="askForm">
+          <label class="visually-hidden" for="questionInput">Ask The Silent Consul</label>
+          <input
+            id="questionInput"
+            name="question"
+            autocomplete="off"
+            placeholder="Ask anything..."
+            value=""
+          >
+          <button class="send-button" type="submit" aria-label="Send question">
+            <span aria-hidden="true">↵</span>
+          </button>
+        </form>
+
+        <article class="answer-panel" id="answerPanel" aria-live="polite">
+          <header class="answer-header">
+            <p class="question-text" id="questionText"></p>
+            <button class="close-button" id="collapseButton" type="button" aria-label="Collapse answer">
+              <span aria-hidden="true">×</span>
+            </button>
+          </header>
+          <div class="answer-body" id="answerBody"></div>
+        </article>
+      </section>
+
+      <aside class="control-strip" aria-label="Assistant profile controls">
+        <div class="control-group">
+          <span class="control-label">Mode</span>
+          <div class="segmented" role="radiogroup" aria-label="Mode">
+            <button type="button" class="segment is-active" data-profile="mode" data-value="rosetta">Rosetta</button>
+            <button type="button" class="segment" data-profile="mode" data-value="oracle">Oracle</button>
+            <button type="button" class="segment" data-profile="mode" data-value="antikythera">Antikythera</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <span class="control-label">Length</span>
+          <div class="segmented compact" role="radiogroup" aria-label="Answer length">
+            <button type="button" class="segment" data-profile="answerLength" data-value="short">Short</button>
+            <button type="button" class="segment is-active" data-profile="answerLength" data-value="standard">Standard</button>
+            <button type="button" class="segment" data-profile="answerLength" data-value="expanded">Expanded</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <span class="control-label">Advice</span>
+          <div class="segmented compact" role="radiogroup" aria-label="Advice level">
+            <button type="button" class="segment" data-profile="adviceLevel" data-value="explain_only">Explain</button>
+            <button type="button" class="segment is-active" data-profile="adviceLevel" data-value="soft_suggest">Soft</button>
+            <button type="button" class="segment" data-profile="adviceLevel" data-value="strategic_advice">Strategic</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <script src="./mock-consul.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

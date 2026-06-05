@@ -12,3 +12,15 @@ Design rules:
 - The UI should feel like Civilization VI glass, not a second dashboard.
 
 The first prototype should prioritize interaction feel before visual detail.
+
+## Static Mock
+
+Open `index.html` in a browser to test the first interaction prototype.
+
+Current behavior:
+
+- Idle top-center input.
+- Submit with Enter or the round submit button.
+- Expand answer panel using a mock Consul response.
+- Switch response mode, length, and advice level at runtime.
+- Auto-collapse after the configured delay.
