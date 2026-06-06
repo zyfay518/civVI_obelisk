@@ -5,16 +5,16 @@ This folder contains the first real Civilization VI in-game UI prototype.
 ## Package
 
 ```text
-civ6-mod/TheSilentConsul/
-  TheSilentConsul.modinfo
-  UI/SilentConsul.xml
-  UI/SilentConsul.lua
+civ6-mod/Obelisk/
+  Obelisk.modinfo
+  UI/Obelisk.xml
+  UI/Obelisk.lua
 ```
 
 ## Manual Game Test
 
-Copy `civ6-mod/TheSilentConsul` into your Civilization VI Mods folder, then
-enable `The Silent Consul` in Additional Content.
+Copy `civ6-mod/Obelisk` into your Civilization VI Mods folder, then enable
+`Obelisk` in Additional Content.
 
 Typical macOS folder:
 
@@ -24,7 +24,7 @@ Typical macOS folder:
 
 Expected result in a single-player game:
 
-- A top-center `Ask anything...` control appears in-game.
+- A top-center `Ask Obelisk...` control appears in-game.
 - Clicking it expands a small answer panel.
 - Clicking `X` collapses the panel.
 - The panel auto-collapses after about 8 seconds.

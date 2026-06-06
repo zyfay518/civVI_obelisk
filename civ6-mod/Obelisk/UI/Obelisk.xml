@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Context Name="SilentConsul">
-  <Container ID="SilentConsulRoot" Anchor="C,T" Offset="0,48" Size="560,260" ConsumeMouse="0">
+<Context Name="Obelisk">
+  <Container ID="ObeliskRoot" Anchor="C,T" Offset="0,48" Size="560,260" ConsumeMouse="0">
     <Container ID="IdlePanel" Anchor="C,T" Size="420,58" ConsumeMouse="1">
       <Image ID="IdleBackground" Anchor="C,C" Size="420,58" Color="80,92,84,130" />
-      <TextButton ID="AskButton" Anchor="C,C" Size="400,44" String="Ask anything..." FontSize="22" />
+      <TextButton ID="AskButton" Anchor="C,C" Size="400,44" String="Ask Obelisk..." FontSize="22" />
     </Container>
 
     <Container ID="ExpandedPanel" Anchor="C,T" Offset="0,68" Size="560,188" ConsumeMouse="1" Hidden="1">

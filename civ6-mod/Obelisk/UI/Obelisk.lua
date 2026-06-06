@@ -1,4 +1,4 @@
--- The Silent Consul: first in-game UI context prototype.
+-- Obelisk: first in-game UI context prototype.
 -- This file intentionally avoids gameplay changes. It only proves that the
 -- overlay context can load and respond inside Civilization VI.
 
@@ -47,7 +47,7 @@ local function Initialize()
   end
 
   SetExpanded(false);
-  print("The Silent Consul UI context loaded.");
+  print("Obelisk UI context loaded.");
 end
 
 Initialize();
