@@ -2,9 +2,10 @@
 -- This file intentionally avoids gameplay changes. It only proves that the
 -- overlay context can load and respond inside Civilization VI.
 
-local AUTO_COLLAPSE_SECONDS:number = 8;
+local AUTO_COLLAPSE_SECONDS:number = 20;
 local isExpanded:boolean = false;
 local collapseElapsed:number = 0;
+local currentMode:string = "data";
 
 local function LookupOrDefault(tag:string, fallback:string, ...)
   local value:string = Locale.Lookup(tag, ...);
@@ -54,7 +55,15 @@ local function CollectSnapshot()
     culture = 0,
     goldBalance = 0,
     goldPerTurn = 0,
-    cityCount = 0
+    cityCount = 0,
+    firstCityName = "-",
+    firstCityPopulation = 0,
+    firstCityProduction = "-",
+    firstCityProductionTurns = -1,
+    currentTech = "-",
+    currentTechTurns = -1,
+    currentCivic = "-",
+    currentCivicTurns = -1
   };
 
   local localPlayerID:number = Game.GetLocalPlayer();
@@ -66,11 +75,27 @@ local function CollectSnapshot()
   local player:table = Players[localPlayerID];
 
   if player:GetTechs() ~= nil then
-    snapshot.science = Round(player:GetTechs():GetScienceYield());
+    local techs:table = player:GetTechs();
+    snapshot.science = Round(techs:GetScienceYield());
+
+    local techID:number = techs:GetResearchingTech();
+
+    if techID ~= -1 and GameInfo.Technologies[techID] ~= nil then
+      snapshot.currentTech = Locale.Lookup(GameInfo.Technologies[techID].Name);
+      snapshot.currentTechTurns = techs:GetTurnsLeft();
+    end
   end
 
   if player:GetCulture() ~= nil then
-    snapshot.culture = Round(player:GetCulture():GetCultureYield());
+    local culture:table = player:GetCulture();
+    snapshot.culture = Round(culture:GetCultureYield());
+
+    local civicID:number = culture:GetProgressingCivic();
+
+    if civicID ~= -1 and GameInfo.Civics[civicID] ~= nil then
+      snapshot.currentCivic = Locale.Lookup(GameInfo.Civics[civicID].Name);
+      snapshot.currentCivicTurns = culture:GetTurnsLeft();
+    end
   end
 
   if player:GetTreasury() ~= nil then
@@ -80,30 +105,125 @@ local function CollectSnapshot()
   end
 
   if player:GetCities() ~= nil then
-    snapshot.cityCount = player:GetCities():GetCount();
+    local cities:table = player:GetCities();
+    snapshot.cityCount = cities:GetCount();
+
+    for _, city in cities:Members() do
+      snapshot.firstCityName = Locale.Lookup(city:GetName());
+
+      if city:GetPopulation() ~= nil then
+        snapshot.firstCityPopulation = city:GetPopulation();
+      end
+
+      if city:GetBuildQueue() ~= nil then
+        local buildQueue:table = city:GetBuildQueue();
+        snapshot.firstCityProductionTurns = buildQueue:GetTurnsLeft();
+
+        if buildQueue:GetCurrentProductionTypeHash() ~= nil then
+          local productionHash:number = buildQueue:GetCurrentProductionTypeHash();
+
+          for row in GameInfo.Units() do
+            if row.Hash == productionHash then
+              snapshot.firstCityProduction = Locale.Lookup(row.Name);
+              return snapshot;
+            end
+          end
+
+          for row in GameInfo.Buildings() do
+            if row.Hash == productionHash then
+              snapshot.firstCityProduction = Locale.Lookup(row.Name);
+              return snapshot;
+            end
+          end
+
+          for row in GameInfo.Districts() do
+            if row.Hash == productionHash then
+              snapshot.firstCityProduction = Locale.Lookup(row.Name);
+              return snapshot;
+            end
+          end
+
+          for row in GameInfo.Projects() do
+            if row.Hash == productionHash then
+              snapshot.firstCityProduction = Locale.Lookup(row.Name);
+              return snapshot;
+            end
+          end
+        end
+      end
+
+      break;
+    end
   end
 
   return snapshot;
 end
 
-local function RefreshAnswer()
+local function BuildDataAnswer(snapshot:table, isChinese:boolean)
+  if isChinese then
+    return "数据快照：[NEWLINE]" ..
+      "城市：" .. snapshot.firstCityName .. "（人口 " .. tostring(snapshot.firstCityPopulation) .. "）[NEWLINE]" ..
+      "生产：" .. snapshot.firstCityProduction .. "（剩余 " .. tostring(snapshot.firstCityProductionTurns) .. " 回合）[NEWLINE]" ..
+      "科技：" .. snapshot.currentTech .. "（剩余 " .. tostring(snapshot.currentTechTurns) .. " 回合）[NEWLINE]" ..
+      "市政：" .. snapshot.currentCivic .. "（剩余 " .. tostring(snapshot.currentCivicTurns) .. " 回合）";
+  end
+
+  return "Data snapshot:[NEWLINE]" ..
+    "City: " .. snapshot.firstCityName .. " (population " .. tostring(snapshot.firstCityPopulation) .. ")[NEWLINE]" ..
+    "Production: " .. snapshot.firstCityProduction .. " (" .. tostring(snapshot.firstCityProductionTurns) .. " turns left)[NEWLINE]" ..
+    "Tech: " .. snapshot.currentTech .. " (" .. tostring(snapshot.currentTechTurns) .. " turns left)[NEWLINE]" ..
+    "Civic: " .. snapshot.currentCivic .. " (" .. tostring(snapshot.currentCivicTurns) .. " turns left)";
+end
+
+local function BuildAdviceAnswer(snapshot:table, isChinese:boolean)
+  if isChinese then
+    if snapshot.cityCount <= 0 then
+      return "规则建议：[NEWLINE]1. 还没有城市，优先观察首都落城位置。[NEWLINE]2. 落城后再校验科技、文化、金币和生产数据是否同步变化。";
+    end
+
+    local advice:string = "规则建议：[NEWLINE]";
+    advice = advice .. "1. 先核对左上角产出：科技 " .. tostring(snapshot.science) .. "/回合、文化 " .. tostring(snapshot.culture) .. "/回合、金币 " .. tostring(snapshot.goldPerTurn) .. "/回合。[NEWLINE]";
+    advice = advice .. "2. 观察城市“" .. snapshot.firstCityName .. "”的人口和生产队列，当前生产是“" .. snapshot.firstCityProduction .. "”。[NEWLINE]";
+
+    if snapshot.science <= 3 then
+      advice = advice .. "3. 科技仍处于开局低产阶段，先看科技目标和周围可改良资源，不急着下最终判断。";
+    else
+      advice = advice .. "3. 科技产出已有基础，下一步可以比较城市人口、改良和科技目标是否匹配。";
+    end
+
+    return advice;
+  end
+
+  if snapshot.cityCount <= 0 then
+    return "Rule advice:[NEWLINE]1. No city yet; inspect the capital settle location first.[NEWLINE]2. After settling, re-check science, culture, gold, and production changes.";
+  end
+
+  return "Rule advice:[NEWLINE]" ..
+    "1. Cross-check top-left yields: science " .. tostring(snapshot.science) .. "/turn, culture " .. tostring(snapshot.culture) .. "/turn, gold " .. tostring(snapshot.goldPerTurn) .. "/turn.[NEWLINE]" ..
+    "2. Inspect " .. snapshot.firstCityName .. "'s population and build queue. Current production: " .. snapshot.firstCityProduction .. ".[NEWLINE]" ..
+    "3. This is a fixed rule response for testing data-grounded advice.";
+end
+
+local function RefreshAnswer(mode:string)
+  currentMode = mode or currentMode;
   local snapshot:table = CollectSnapshot();
   local isChinese:boolean = IsChineseUI();
 
-  local fallbackQuestion:string = "What should I inspect right now?";
+  local fallbackQuestion:string = currentMode == "data" and "What is the current data?" or "What should I inspect right now?";
   local fallbackMetrics:string = "Turn {1} · Science {2}/turn · Culture {3}/turn · Gold {4} ({5}/turn) · Cities {6}";
-  local fallbackOpening:string = "Opening snapshot: you have not settled a city yet. Founding the capital is the first state change to inspect; after that Obelisk can compare science, culture, gold, and city output.";
-  local fallbackWithCity:string = "Current rule check: science is {1}/turn, culture is {2}/turn, and gold flow is {3}/turn. This is a local data read, not AI yet. Next we can add city-level details and then replace this rule response with the AI Consul.";
+  local answer:string = BuildDataAnswer(snapshot, isChinese);
 
   if isChinese then
-    fallbackQuestion = "现在我应该先看什么？";
+    fallbackQuestion = currentMode == "data" and "当前数据是什么？" or "根据当前数据，有什么建议？";
     fallbackMetrics = "回合 {1} · 科技 {2}/回合 · 文化 {3}/回合 · 金币 {4}（{5}/回合）· 城市 {6}";
-    fallbackOpening = "开局快照：你还没有建立城市。第一件值得观察的状态变化是首都落城；之后 Obelisk 就可以比较科技、文化、金币和城市产出。";
-    fallbackWithCity = "当前规则检查：科技为 {1}/回合，文化为 {2}/回合，金币流为 {3}/回合。这是本地数据读取，不是 AI 回复。下一步可以加入城市级细节，之后再把这段规则回复替换为 AI Consul。";
+  end
+
+  if currentMode == "advice" then
+    answer = BuildAdviceAnswer(snapshot, isChinese);
   end
 
   if Controls.QuestionLabel ~= nil then
-    Controls.QuestionLabel:SetText(LookupOrDefault("LOC_OBELISK_SAMPLE_QUESTION", fallbackQuestion));
+    Controls.QuestionLabel:SetText(fallbackQuestion);
   end
 
   if Controls.MetricsLabel ~= nil then
@@ -120,15 +240,7 @@ local function RefreshAnswer()
   end
 
   if Controls.AnswerLabel ~= nil then
-    local answerTag:string = "LOC_OBELISK_RULE_ANSWER_OPENING";
-    local fallbackAnswer:string = fallbackOpening;
-
-    if snapshot.cityCount > 0 then
-      answerTag = "LOC_OBELISK_RULE_ANSWER_WITH_CITY";
-      fallbackAnswer = fallbackWithCity;
-    end
-
-    Controls.AnswerLabel:SetText(LookupOrDefault(answerTag, fallbackAnswer, snapshot.science, snapshot.culture, snapshot.goldPerTurn));
+    Controls.AnswerLabel:SetText(answer);
   end
 end
 
@@ -137,7 +249,7 @@ local function SetExpanded(expanded:boolean)
   collapseElapsed = 0;
 
   if expanded then
-    RefreshAnswer();
+    RefreshAnswer(currentMode);
   end
 
   if Controls.ExpandedPanel ~= nil then
@@ -150,7 +262,16 @@ local function SetExpanded(expanded:boolean)
 end
 
 local function OnAsk()
+  currentMode = "data";
   SetExpanded(true);
+end
+
+local function OnData()
+  RefreshAnswer("data");
+end
+
+local function OnAdvice()
+  RefreshAnswer("advice");
 end
 
 local function OnCollapse()
@@ -163,6 +284,14 @@ local function Initialize()
   if Controls.AskButton ~= nil then
     local askFallback:string = IsChineseUI() and "询问 Obelisk..." or "Ask Obelisk...";
     Controls.AskButton:SetText(LookupOrDefault("LOC_OBELISK_ASK", askFallback));
+  end
+
+  if Controls.DataButton ~= nil then
+    Controls.DataButton:SetText(IsChineseUI() and "当前数据" or "Data");
+  end
+
+  if Controls.AdviceButton ~= nil then
+    Controls.AdviceButton:SetText(IsChineseUI() and "规则建议" or "Advice");
   end
 
   ContextPtr:SetUpdate(function(deltaTime:number)
@@ -181,6 +310,14 @@ local function Initialize()
 
   if Controls.CollapseButton ~= nil then
     Controls.CollapseButton:RegisterCallback(Mouse.eLClick, OnCollapse);
+  end
+
+  if Controls.DataButton ~= nil then
+    Controls.DataButton:RegisterCallback(Mouse.eLClick, OnData);
+  end
+
+  if Controls.AdviceButton ~= nil then
+    Controls.AdviceButton:RegisterCallback(Mouse.eLClick, OnAdvice);
   end
 
   SetExpanded(false);
