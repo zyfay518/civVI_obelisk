@@ -28,6 +28,8 @@ local function OnCollapse()
 end
 
 local function Initialize()
+  ContextPtr:SetHide(false);
+
   ContextPtr:SetUpdate(function(deltaTime:number)
     if isExpanded then
       collapseElapsed = collapseElapsed + deltaTime;
