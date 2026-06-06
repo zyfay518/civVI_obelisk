@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+  <EnglishText>
+    <Row Tag="LOC_OBELISK_ASK">
+      <Text>Ask Obelisk...</Text>
+    </Row>
+    <Row Tag="LOC_OBELISK_SAMPLE_QUESTION">
+      <Text>What should I inspect right now?</Text>
+    </Row>
+    <Row Tag="LOC_OBELISK_METRICS">
+      <Text>Turn {1} · Science {2}/turn · Culture {3}/turn · Gold {4} ({5}/turn) · Cities {6}</Text>
+    </Row>
+    <Row Tag="LOC_OBELISK_RULE_ANSWER_OPENING">
+      <Text>Opening snapshot: you have not settled a city yet. Founding the capital is the first state change to inspect; after that Obelisk can compare science, culture, gold, and city output.</Text>
+    </Row>
+    <Row Tag="LOC_OBELISK_RULE_ANSWER_WITH_CITY">
+      <Text>Current rule check: science is {1}/turn, culture is {2}/turn, and gold flow is {3}/turn. This is a local data read, not AI yet. Next we can add city-level details and then replace this rule response with the AI Consul.</Text>
+    </Row>
+  </EnglishText>
+</GameData>

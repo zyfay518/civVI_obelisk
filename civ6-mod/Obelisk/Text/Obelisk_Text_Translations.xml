@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+  <LocalizedText>
+    <Replace Tag="LOC_OBELISK_ASK" Language="zh_Hans_CN">
+      <Text>询问 Obelisk...</Text>
+    </Replace>
+    <Replace Tag="LOC_OBELISK_SAMPLE_QUESTION" Language="zh_Hans_CN">
+      <Text>现在我应该先看什么？</Text>
+    </Replace>
+    <Replace Tag="LOC_OBELISK_METRICS" Language="zh_Hans_CN">
+      <Text>回合 {1} · 科技 {2}/回合 · 文化 {3}/回合 · 金币 {4}（{5}/回合）· 城市 {6}</Text>
+    </Replace>
+    <Replace Tag="LOC_OBELISK_RULE_ANSWER_OPENING" Language="zh_Hans_CN">
+      <Text>开局快照：你还没有建立城市。第一件值得观察的状态变化是首都落城；之后 Obelisk 就可以比较科技、文化、金币和城市产出。</Text>
+    </Replace>
+    <Replace Tag="LOC_OBELISK_RULE_ANSWER_WITH_CITY" Language="zh_Hans_CN">
+      <Text>当前规则检查：科技为 {1}/回合，文化为 {2}/回合，金币流为 {3}/回合。这是本地数据读取，不是 AI 回复。下一步可以加入城市级细节，之后再把这段规则回复替换为 AI Consul。</Text>
+    </Replace>
+    <Replace Tag="LOC_OBELISK_ASK" Language="zh_Hant_HK">
+      <Text>詢問 Obelisk...</Text>
+    </Replace>
+    <Replace Tag="LOC_OBELISK_SAMPLE_QUESTION" Language="zh_Hant_HK">
+      <Text>現在我應該先看什麼？</Text>
+    </Replace>
+    <Replace Tag="LOC_OBELISK_METRICS" Language="zh_Hant_HK">
+      <Text>回合 {1} · 科技 {2}/回合 · 文化 {3}/回合 · 金幣 {4}（{5}/回合）· 城市 {6}</Text>
+    </Replace>
+    <Replace Tag="LOC_OBELISK_RULE_ANSWER_OPENING" Language="zh_Hant_HK">
+      <Text>開局快照：你還沒有建立城市。第一個值得觀察的狀態變化是首都落城；之後 Obelisk 就可以比較科技、文化、金幣和城市產出。</Text>
+    </Replace>
+    <Replace Tag="LOC_OBELISK_RULE_ANSWER_WITH_CITY" Language="zh_Hant_HK">
+      <Text>目前規則檢查：科技為 {1}/回合，文化為 {2}/回合，金幣流為 {3}/回合。這是本地資料讀取，不是 AI 回覆。下一步可以加入城市級細節，之後再把這段規則回覆替換為 AI Consul。</Text>
+    </Replace>
+  </LocalizedText>
+</GameData>

@@ -24,10 +24,12 @@ Typical macOS folder:
 
 Expected result in a single-player game:
 
-- A top-center `Ask Obelisk...` control appears in-game.
+- A top-center localized `Ask Obelisk...` / `询问 Obelisk...` control appears in-game.
 - Clicking it expands a small answer panel.
+- The answer panel shows a local snapshot: turn, science, culture, gold, and
+  city count.
 - Clicking `X` collapses the panel.
 - The panel auto-collapses after about 8 seconds.
 
-This version does not call AI yet. It only validates that the in-game UI context
-loads and can respond to clicks.
+This version does not call AI yet. It validates that the in-game UI context can
+load, respond to clicks, localize text, and read simple game-state values.

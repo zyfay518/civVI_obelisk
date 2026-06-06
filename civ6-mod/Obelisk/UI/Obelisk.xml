@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context>
-  <Container ID="ObeliskRoot" Anchor="C,T" Offset="0,48" Size="560,260" ConsumeMouse="0">
-    <Container ID="IdlePanel" Anchor="C,T" Size="420,58" ConsumeMouse="1">
-      <Image ID="IdleBackground" Anchor="C,C" Size="420,58" Color="80,92,84,130" />
-      <TextButton ID="AskButton" Anchor="C,C" Size="400,44" String="Ask Obelisk..." FontSize="22" />
+  <Container ID="ObeliskRoot" Anchor="C,T" Offset="0,48" Size="560,238" ConsumeMouse="0">
+    <Container ID="IdlePanel" Anchor="C,T" Size="360,46" ConsumeMouse="1">
+      <Grid ID="IdleBackground" Anchor="C,C" Size="360,46" Texture="Controls_SubContainerFill" SliceCorner="12,12" SliceTextureSize="24,24" Color="255,255,255,138" />
+      <Grid Anchor="C,C" Size="358,44" Texture="Controls_SubContainerFill" SliceCorner="12,12" SliceTextureSize="24,24" Color="255,255,255,42" />
+      <TextButton ID="AskButton" Anchor="C,C" Size="336,34" String="LOC_OBELISK_ASK" FontSize="18" />
     </Container>
 
-    <Container ID="ExpandedPanel" Anchor="C,T" Offset="0,68" Size="560,188" ConsumeMouse="1" Hidden="1">
-      <Image ID="AnswerBackground" Anchor="C,C" Size="560,188" Color="225,229,210,210" />
-      <Label ID="QuestionLabel" Anchor="L,T" Offset="22,16" Size="500,28" String="How can I increase my science output?" FontSize="20" Color="255,255,255,255" />
-      <Label ID="AnswerLabel" Anchor="L,T" Offset="22,58" Size="510,112" Wrap="1" FontSize="17" Color="28,24,18,255"
-        String="Your science is behind mainly because your research base is still thin: too few Campuses, no Libraries yet, and limited population. First inspect city panels, Campus districts, and Library gaps." />
-      <TextButton ID="CollapseButton" Anchor="R,T" Offset="-12,12" Size="36,30" String="X" FontSize="16" />
+    <Container ID="ExpandedPanel" Anchor="C,T" Offset="0,56" Size="560,172" ConsumeMouse="1" Hidden="1">
+      <Grid ID="AnswerBackground" Anchor="C,C" Size="560,172" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,168" />
+      <Grid Anchor="C,C" Size="556,168" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,54" />
+      <Label ID="QuestionLabel" Anchor="L,T" Offset="22,14" Size="494,26" String="LOC_OBELISK_SAMPLE_QUESTION" FontSize="17" Color="255,255,255,255" />
+      <Label ID="MetricsLabel" Anchor="L,T" Offset="22,46" Size="516,24" String="" FontSize="13" Color="78,74,62,255" />
+      <Label ID="AnswerLabel" Anchor="L,T" Offset="22,74" Size="516,78" Wrap="1" FontSize="15" Color="28,24,18,255" String="LOC_OBELISK_SAMPLE_ANSWER" />
+      <TextButton ID="CollapseButton" Anchor="R,T" Offset="-12,10" Size="30,26" String="X" FontSize="13" />
     </Container>
   </Container>
 </Context>

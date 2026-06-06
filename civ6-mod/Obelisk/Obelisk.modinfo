@@ -15,8 +15,14 @@
       <File>UI/Obelisk.xml</File>
     </AddUserInterfaces>
   </InGameActions>
+  <LocalizedText>
+    <File>Text/Obelisk_Text_en_US.xml</File>
+    <File>Text/Obelisk_Text_Translations.xml</File>
+  </LocalizedText>
   <Files>
     <File>UI/Obelisk.xml</File>
     <File>UI/Obelisk.lua</File>
+    <File>Text/Obelisk_Text_en_US.xml</File>
+    <File>Text/Obelisk_Text_Translations.xml</File>
   </Files>
 </Mod>
