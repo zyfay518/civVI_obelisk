@@ -4,11 +4,15 @@
 
 local AUTO_COLLAPSE_SECONDS:number = 20;
 local MAX_JOURNAL_ENTRIES:number = 12;
+local JOURNAL_PROPERTY_KEY:string = "OBELISK_JOURNAL_V1";
 local isExpanded:boolean = false;
 local collapseElapsed:number = 0;
 local currentMode:string = "data";
 local journal:table = {};
 local journalSequence:number = 0;
+local persistedEntryCount:number = 0;
+local persistenceLoadStatus:string = "not_checked";
+local persistenceSaveStatus:string = "not_checked";
 
 local function LookupOrDefault(tag:string, fallback:string, ...)
   local value:string = Locale.Lookup(tag, ...);
@@ -63,6 +67,108 @@ local function FormatDelta(value:number)
   return tostring(value);
 end
 
+local function GetLocalPlayerObject()
+  local localPlayerID:number = Game.GetLocalPlayer();
+
+  if localPlayerID == -1 or Players[localPlayerID] == nil then
+    return nil;
+  end
+
+  return Players[localPlayerID];
+end
+
+local function CompactSnapshot(snapshot:table)
+  return {
+    turn = snapshot.turn,
+    reason = snapshot.reason,
+    sequence = snapshot.sequence,
+    science = snapshot.science,
+    culture = snapshot.culture,
+    goldBalance = snapshot.goldBalance,
+    goldPerTurn = snapshot.goldPerTurn,
+    cityCount = snapshot.cityCount,
+    firstCityName = snapshot.firstCityName,
+    firstCityPopulation = snapshot.firstCityPopulation,
+    firstCityProduction = snapshot.firstCityProduction,
+    firstCityProductionTurns = snapshot.firstCityProductionTurns,
+    currentTech = snapshot.currentTech,
+    currentTechTurns = snapshot.currentTechTurns,
+    currentCivic = snapshot.currentCivic,
+    currentCivicTurns = snapshot.currentCivicTurns
+  };
+end
+
+local function PersistJournal()
+  local player:table = GetLocalPlayerObject();
+
+  if player == nil or player.SetProperty == nil then
+    persistenceSaveStatus = "unavailable";
+    return false;
+  end
+
+  local compactJournal:table = {};
+
+  for index:number = 1, #journal do
+    table.insert(compactJournal, CompactSnapshot(journal[index]));
+  end
+
+  local payload:table = {
+    version = 1,
+    savedAtTurn = Game.GetCurrentGameTurn(),
+    savedSequence = journalSequence,
+    entries = compactJournal
+  };
+
+  local success:boolean = pcall(function()
+    player:SetProperty(JOURNAL_PROPERTY_KEY, payload);
+  end);
+
+  if success then
+    persistedEntryCount = #compactJournal;
+    persistenceSaveStatus = "saved";
+    return true;
+  end
+
+  persistenceSaveStatus = "save_failed";
+  return false;
+end
+
+local function LoadPersistedJournal()
+  local player:table = GetLocalPlayerObject();
+
+  if player == nil or player.GetProperty == nil then
+    persistenceLoadStatus = "unavailable";
+    return;
+  end
+
+  local success:boolean, payload:table = pcall(function()
+    return player:GetProperty(JOURNAL_PROPERTY_KEY);
+  end);
+
+  if not success then
+    persistenceLoadStatus = "load_failed";
+    return;
+  end
+
+  if payload == nil or payload.entries == nil then
+    persistenceLoadStatus = "empty";
+    return;
+  end
+
+  journal = {};
+
+  for index:number = 1, #payload.entries do
+    table.insert(journal, payload.entries[index]);
+
+    if payload.entries[index].sequence ~= nil and payload.entries[index].sequence > journalSequence then
+      journalSequence = payload.entries[index].sequence;
+    end
+  end
+
+  persistedEntryCount = #journal;
+  persistenceLoadStatus = "loaded";
+end
+
 local function CollectSnapshot()
   local snapshot:table = {
     turn = Game.GetCurrentGameTurn(),
@@ -81,13 +187,11 @@ local function CollectSnapshot()
     currentCivicTurns = -1
   };
 
-  local localPlayerID:number = Game.GetLocalPlayer();
+  local player:table = GetLocalPlayerObject();
 
-  if localPlayerID == -1 or Players[localPlayerID] == nil then
+  if player == nil then
     return snapshot;
   end
-
-  local player:table = Players[localPlayerID];
 
   if player:GetTechs() ~= nil then
     local techs:table = player:GetTechs();
@@ -185,6 +289,7 @@ local function RecordSnapshot(reason:string)
     table.remove(journal, 1);
   end
 
+  PersistJournal();
   return snapshot;
 end
 
@@ -276,6 +381,31 @@ local function BuildCompareAnswer(snapshot:table, previous:table, isChinese:bool
     "This session has recorded " .. tostring(#journal) .. " snapshots.";
 end
 
+local function BuildMemoryAnswer(snapshot:table, isChinese:boolean)
+  local lastEntry:table = nil;
+
+  if #journal > 0 then
+    lastEntry = journal[#journal];
+  end
+
+  local lastTurn:string = lastEntry ~= nil and tostring(lastEntry.turn) or "-";
+  local lastReason:string = lastEntry ~= nil and tostring(lastEntry.reason or "-") or "-";
+
+  if isChinese then
+    return "记忆状态：[NEWLINE]" ..
+      "会话快照：" .. tostring(#journal) .. "/" .. tostring(MAX_JOURNAL_ENTRIES) .. " 条；已写入：" .. tostring(persistedEntryCount) .. " 条。[NEWLINE]" ..
+      "读取状态：" .. persistenceLoadStatus .. "；写入状态：" .. persistenceSaveStatus .. "。[NEWLINE]" ..
+      "最后记录：回合 " .. lastTurn .. "，来源 " .. lastReason .. "。[NEWLINE]" ..
+      "当前快照：回合 " .. tostring(snapshot.turn) .. "，城市 " .. tostring(snapshot.cityCount) .. "，金币 " .. tostring(snapshot.goldBalance) .. "。";
+  end
+
+  return "Memory status:[NEWLINE]" ..
+    "Session snapshots: " .. tostring(#journal) .. "/" .. tostring(MAX_JOURNAL_ENTRIES) .. "; persisted: " .. tostring(persistedEntryCount) .. ".[NEWLINE]" ..
+    "Load status: " .. persistenceLoadStatus .. "; save status: " .. persistenceSaveStatus .. ".[NEWLINE]" ..
+    "Last record: turn " .. lastTurn .. ", reason " .. lastReason .. ".[NEWLINE]" ..
+    "Current snapshot: turn " .. tostring(snapshot.turn) .. ", cities " .. tostring(snapshot.cityCount) .. ", gold " .. tostring(snapshot.goldBalance) .. ".";
+end
+
 local function RefreshAnswer(mode:string, recordReason:string)
   currentMode = mode or currentMode;
   local snapshot:table = RecordSnapshot(recordReason or currentMode);
@@ -297,6 +427,11 @@ local function RefreshAnswer(mode:string, recordReason:string)
   if currentMode == "compare" then
     fallbackQuestion = isChinese and "和上一回合相比，发生了什么变化？" or "What changed since the previous turn?";
     answer = BuildCompareAnswer(snapshot, FindPreviousTurnSnapshot(snapshot.turn), isChinese);
+  end
+
+  if currentMode == "memory" then
+    fallbackQuestion = isChinese and "Obelisk 现在记住了什么？" or "What does Obelisk remember?";
+    answer = BuildMemoryAnswer(snapshot, isChinese);
   end
 
   if Controls.QuestionLabel ~= nil then
@@ -355,6 +490,10 @@ local function OnCompare()
   RefreshAnswer("compare");
 end
 
+local function OnMemory()
+  RefreshAnswer("memory");
+end
+
 local function OnCollapse()
   SetExpanded(false);
 end
@@ -387,6 +526,10 @@ local function Initialize()
     Controls.CompareButton:SetText(IsChineseUI() and "回合对比" or "Compare");
   end
 
+  if Controls.MemoryButton ~= nil then
+    Controls.MemoryButton:SetText(IsChineseUI() and "记忆状态" or "Memory");
+  end
+
   ContextPtr:SetUpdate(function(deltaTime:number)
     if isExpanded then
       collapseElapsed = collapseElapsed + deltaTime;
@@ -417,10 +560,15 @@ local function Initialize()
     Controls.CompareButton:RegisterCallback(Mouse.eLClick, OnCompare);
   end
 
+  if Controls.MemoryButton ~= nil then
+    Controls.MemoryButton:RegisterCallback(Mouse.eLClick, OnMemory);
+  end
+
   if Events.LocalPlayerTurnBegin ~= nil then
     Events.LocalPlayerTurnBegin.Add(OnLocalPlayerTurnBegin);
   end
 
+  LoadPersistedJournal();
   RecordSnapshot("initialize");
   SetExpanded(false);
   print("Obelisk UI context loaded.");
