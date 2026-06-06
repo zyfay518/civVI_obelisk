@@ -3,9 +3,12 @@
 -- overlay context can load and respond inside Civilization VI.
 
 local AUTO_COLLAPSE_SECONDS:number = 20;
+local MAX_JOURNAL_ENTRIES:number = 12;
 local isExpanded:boolean = false;
 local collapseElapsed:number = 0;
 local currentMode:string = "data";
+local journal:table = {};
+local journalSequence:number = 0;
 
 local function LookupOrDefault(tag:string, fallback:string, ...)
   local value:string = Locale.Lookup(tag, ...);
@@ -46,6 +49,18 @@ end
 
 local function Round(value:number)
   return math.floor((value or 0) + 0.5);
+end
+
+local function FormatDelta(value:number)
+  if value == nil then
+    return "0";
+  end
+
+  if value > 0 then
+    return "+" .. tostring(value);
+  end
+
+  return tostring(value);
 end
 
 local function CollectSnapshot()
@@ -159,6 +174,32 @@ local function CollectSnapshot()
   return snapshot;
 end
 
+local function RecordSnapshot(reason:string)
+  local snapshot:table = CollectSnapshot();
+  journalSequence = journalSequence + 1;
+  snapshot.reason = reason or "manual";
+  snapshot.sequence = journalSequence;
+  table.insert(journal, snapshot);
+
+  while #journal > MAX_JOURNAL_ENTRIES do
+    table.remove(journal, 1);
+  end
+
+  return snapshot;
+end
+
+local function FindPreviousTurnSnapshot(currentTurn:number)
+  for index:number = #journal, 1, -1 do
+    local snapshot:table = journal[index];
+
+    if snapshot.turn ~= nil and snapshot.turn < currentTurn then
+      return snapshot;
+    end
+  end
+
+  return nil;
+end
+
 local function BuildDataAnswer(snapshot:table, isChinese:boolean)
   if isChinese then
     return "数据快照：[NEWLINE]" ..
@@ -204,9 +245,40 @@ local function BuildAdviceAnswer(snapshot:table, isChinese:boolean)
     "3. This is a fixed rule response for testing data-grounded advice.";
 end
 
-local function RefreshAnswer(mode:string)
+local function BuildCompareAnswer(snapshot:table, previous:table, isChinese:boolean)
+  if previous == nil then
+    if isChinese then
+      return "回合对比：[NEWLINE]还没有上一回合快照。请先结束一回合，等新回合开始后再点这里。[NEWLINE]当前会话已记录 " .. tostring(#journal) .. " 条快照。";
+    end
+
+    return "Turn comparison:[NEWLINE]No previous-turn snapshot yet. End one turn, then open this again.[NEWLINE]This session has recorded " .. tostring(#journal) .. " snapshots.";
+  end
+
+  local scienceDelta:number = snapshot.science - previous.science;
+  local cultureDelta:number = snapshot.culture - previous.culture;
+  local goldPerTurnDelta:number = snapshot.goldPerTurn - previous.goldPerTurn;
+  local goldDelta:number = snapshot.goldBalance - previous.goldBalance;
+  local cityDelta:number = snapshot.cityCount - previous.cityCount;
+  local populationDelta:number = snapshot.firstCityPopulation - previous.firstCityPopulation;
+
+  if isChinese then
+    return "回合对比：当前回合 " .. tostring(snapshot.turn) .. "，对比回合 " .. tostring(previous.turn) .. "。[NEWLINE]" ..
+      "科技/回合 " .. FormatDelta(scienceDelta) .. "，文化/回合 " .. FormatDelta(cultureDelta) .. "，金币/回合 " .. FormatDelta(goldPerTurnDelta) .. "，金币总量 " .. FormatDelta(goldDelta) .. "。[NEWLINE]" ..
+      "城市数 " .. FormatDelta(cityDelta) .. "，首城人口 " .. FormatDelta(populationDelta) .. "。[NEWLINE]" ..
+      "当前生产：“" .. snapshot.firstCityProduction .. "”；上一回合记录：“" .. previous.firstCityProduction .. "”。[NEWLINE]" ..
+      "当前会话已记录 " .. tostring(#journal) .. " 条快照。";
+  end
+
+  return "Turn comparison: current turn " .. tostring(snapshot.turn) .. ", compared with turn " .. tostring(previous.turn) .. ".[NEWLINE]" ..
+    "Science/turn " .. FormatDelta(scienceDelta) .. ", culture/turn " .. FormatDelta(cultureDelta) .. ", gold/turn " .. FormatDelta(goldPerTurnDelta) .. ", gold balance " .. FormatDelta(goldDelta) .. ".[NEWLINE]" ..
+    "Cities " .. FormatDelta(cityDelta) .. ", first-city population " .. FormatDelta(populationDelta) .. ".[NEWLINE]" ..
+    "Current production: " .. snapshot.firstCityProduction .. "; previous record: " .. previous.firstCityProduction .. ".[NEWLINE]" ..
+    "This session has recorded " .. tostring(#journal) .. " snapshots.";
+end
+
+local function RefreshAnswer(mode:string, recordReason:string)
   currentMode = mode or currentMode;
-  local snapshot:table = CollectSnapshot();
+  local snapshot:table = RecordSnapshot(recordReason or currentMode);
   local isChinese:boolean = IsChineseUI();
 
   local fallbackQuestion:string = currentMode == "data" and "What is the current data?" or "What should I inspect right now?";
@@ -220,6 +292,11 @@ local function RefreshAnswer(mode:string)
 
   if currentMode == "advice" then
     answer = BuildAdviceAnswer(snapshot, isChinese);
+  end
+
+  if currentMode == "compare" then
+    fallbackQuestion = isChinese and "和上一回合相比，发生了什么变化？" or "What changed since the previous turn?";
+    answer = BuildCompareAnswer(snapshot, FindPreviousTurnSnapshot(snapshot.turn), isChinese);
   end
 
   if Controls.QuestionLabel ~= nil then
@@ -274,8 +351,20 @@ local function OnAdvice()
   RefreshAnswer("advice");
 end
 
+local function OnCompare()
+  RefreshAnswer("compare");
+end
+
 local function OnCollapse()
   SetExpanded(false);
+end
+
+local function OnLocalPlayerTurnBegin()
+  RecordSnapshot("turn_begin");
+
+  if isExpanded then
+    RefreshAnswer(currentMode, "turn_begin_refresh");
+  end
 end
 
 local function Initialize()
@@ -292,6 +381,10 @@ local function Initialize()
 
   if Controls.AdviceButton ~= nil then
     Controls.AdviceButton:SetText(IsChineseUI() and "规则建议" or "Advice");
+  end
+
+  if Controls.CompareButton ~= nil then
+    Controls.CompareButton:SetText(IsChineseUI() and "回合对比" or "Compare");
   end
 
   ContextPtr:SetUpdate(function(deltaTime:number)
@@ -320,6 +413,15 @@ local function Initialize()
     Controls.AdviceButton:RegisterCallback(Mouse.eLClick, OnAdvice);
   end
 
+  if Controls.CompareButton ~= nil then
+    Controls.CompareButton:RegisterCallback(Mouse.eLClick, OnCompare);
+  end
+
+  if Events.LocalPlayerTurnBegin ~= nil then
+    Events.LocalPlayerTurnBegin.Add(OnLocalPlayerTurnBegin);
+  end
+
+  RecordSnapshot("initialize");
   SetExpanded(false);
   print("Obelisk UI context loaded.");
 end
