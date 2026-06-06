@@ -8,6 +8,10 @@
     <CompatibleVersions>1.2,2.0</CompatibleVersions>
   </Properties>
   <InGameActions>
+    <UpdateText id="ObeliskInGameText">
+      <File>Text/Obelisk_Text_en_US.xml</File>
+      <File>Text/Obelisk_Text_Translations.xml</File>
+    </UpdateText>
     <AddUserInterfaces id="ObeliskInGameUI">
       <Properties>
         <Context>InGame</Context>
@@ -15,10 +19,6 @@
       <File>UI/Obelisk.xml</File>
     </AddUserInterfaces>
   </InGameActions>
-  <LocalizedText>
-    <File>Text/Obelisk_Text_en_US.xml</File>
-    <File>Text/Obelisk_Text_Translations.xml</File>
-  </LocalizedText>
   <Files>
     <File>UI/Obelisk.xml</File>
     <File>UI/Obelisk.lua</File>
