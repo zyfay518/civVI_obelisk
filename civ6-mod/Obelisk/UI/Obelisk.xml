@@ -18,7 +18,7 @@
       <TextButton ID="CitiesButton" Anchor="L,T" Offset="486,44" Size="108,30" String="城市总览" FontSize="13" />
       <TextButton ID="AuditButton" Anchor="L,T" Offset="602,44" Size="108,30" String="数据体检" FontSize="13" />
       <Label ID="MetricsLabel" Anchor="L,T" Offset="22,82" Size="916,32" String="" FontSize="13" Color="78,74,62,255" Wrap="1" />
-      <Label ID="AnswerLabel" Anchor="L,T" Offset="22,118" Size="916,446" Wrap="1" FontSize="11" Color="28,24,18,255" String="" />
+      <Label ID="AnswerLabel" Anchor="L,T" Offset="22,118" Size="916,446" Wrap="1" FontSize="12" Color="28,24,18,255" String="" />
       <TextButton ID="CollapseButton" Anchor="R,T" Offset="-12,10" Size="30,26" String="X" FontSize="13" />
     </Container>
   </Container>
