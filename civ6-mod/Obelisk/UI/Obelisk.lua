@@ -971,65 +971,21 @@ end
 
 local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   local lines:table = {};
-  local resourceSample:string = (#snapshot.resourceSamples > 0) and table.concat(snapshot.resourceSamples, "、") or "-";
-  local unitSample:string = (#snapshot.unitSamples > 0) and table.concat(snapshot.unitSamples, "、") or "-";
-  local unitDetailSample:string = (#snapshot.unitDetailSamples > 0) and table.concat(snapshot.unitDetailSamples, "、") or "-";
-  local greatPeopleSample:string = (#snapshot.greatPeopleSamples > 0) and table.concat(snapshot.greatPeopleSamples, "、") or "-";
-  local policySample:string = (#snapshot.policyCards > 0) and table.concat(snapshot.policyCards, "、") or "-";
-  local diplomacySample:string = (#snapshot.diplomacySamples > 0) and table.concat(snapshot.diplomacySamples, "、") or "-";
-  local diplomacyModifierSample:string = (#snapshot.diplomacyModifierSamples > 0) and table.concat(snapshot.diplomacyModifierSamples, "、") or "-";
-  local victorySample:string = (#snapshot.victorySamples > 0) and table.concat(snapshot.victorySamples, "、") or "-";
-  local victoryDetailSample:string = (#snapshot.victoryDetailSamples > 0) and table.concat(snapshot.victoryDetailSamples, "、") or "-";
-  local firstCity:table = (#snapshot.cities > 0) and snapshot.cities[1] or nil;
-  local cityDetail:string = "-";
-  local workedPlotSample:string = "-";
-  local plotDetailSample:string = "-";
-
-  if firstCity ~= nil then
-    workedPlotSample = (#firstCity.workedPlotSamples > 0) and table.concat(firstCity.workedPlotSamples, "；") or "-";
-    plotDetailSample = (#firstCity.plotDetailSamples > 0) and table.concat(firstCity.plotDetailSamples, "；") or "-";
-    cityDetail = firstCity.name ..
-      " 人口" .. tostring(firstCity.population) ..
-      " 食物" .. AuditValue(firstCity.foodSurplus, "?") ..
-      " 住房" .. AuditValue(firstCity.housing, "?") ..
-      " 宜居" .. AuditValue(firstCity.amenities, "?") .. "/" .. AuditValue(firstCity.amenitiesNeeded, "?") ..
-      " 产能" .. AuditValue(firstCity.yields.production, "?");
-  end
 
   if isChinese then
-    table.insert(lines, "数据体检：下面是 Obelisk 现在能直接读到的数据域。");
-    table.insert(lines, "玩家产出：科技/文化/金币已读；信仰 " .. AuditStatus(snapshot.faithPerTurn, true) .. "，旅游 " .. AuditStatus(snapshot.tourism, true) .. "，军力 " .. AuditStatus(snapshot.militaryStrength, true) .. "，分数 " .. AuditStatus(snapshot.score, true) .. "。");
-    table.insert(lines, "时代/树：时代 " .. AuditValue(snapshot.eraName, "?") .. "；当前科技 " .. snapshot.currentTech .. "（" .. tostring(snapshot.currentTechTurns) .. " 回合）；当前市政 " .. snapshot.currentCivic .. "（" .. tostring(snapshot.currentCivicTurns) .. " 回合）；科技已完成 " .. AuditValue(snapshot.techCompletedCount, "?") .. "；市政已完成 " .. AuditValue(snapshot.civicCompletedCount, "?") .. "。");
-    table.insert(lines, "城市细节：" .. cityDetail .. "。");
-    table.insert(lines, "全城列表：已读 " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "；资源 " .. AuditStatus(snapshot.resourceCount, true) .. " " .. AuditValue(snapshot.resourceCount, "?") .. " 类：加成" .. tostring(snapshot.bonusResourceCount) .. " 奢侈" .. tostring(snapshot.luxuryResourceCount) .. " 战略" .. tostring(snapshot.strategicResourceCount) .. "；" .. resourceSample .. "。");
-    table.insert(lines, "城市构成：建筑 " .. tostring(snapshot.buildingCount) .. "，区域 " .. tostring(snapshot.districtCount) .. "，奇观 " .. tostring(snapshot.wonderCount) .. "，贸易路线 " .. AuditValue(snapshot.tradeRouteActive, "?") .. "/" .. AuditValue(snapshot.tradeRouteCapacity, "?") .. "，首城忠诚 " .. AuditValue(snapshot.firstCityLoyaltySummary, "?") .. "。");
-    table.insert(lines, "宗教/信仰/伟人：" .. snapshot.religionSummary .. "；信仰库存 " .. AuditValue(snapshot.faithBalance, "?") .. "；信仰/回合 " .. AuditValue(snapshot.faithPerTurn, "?") .. "；伟人 " .. greatPeopleSample .. "。");
-    table.insert(lines, "单位：" .. AuditStatus(snapshot.unitCount, true) .. " " .. AuditValue(snapshot.unitCount, "?") .. " 个：" .. unitSample .. "；明细 " .. unitDetailSample .. "；外交已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
-    table.insert(lines, "政体/政策：" .. AuditValue(snapshot.governmentName, "?") .. "；槽位 " .. AuditValue(snapshot.policySlotCount, "?") .. "；已挂 " .. tostring(#snapshot.policyCards) .. "：" .. policySample .. "。");
-    table.insert(lines, "公民/地块：首城工作地块 " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "；样例 " .. workedPlotSample .. "。");
-    table.insert(lines, "地块归因：" .. plotDetailSample .. "。");
-    table.insert(lines, "外交细节：主要 " .. AuditValue(snapshot.majorContacts, "?") .. "，城邦 " .. AuditValue(snapshot.minorContacts, "?") .. "，战争 " .. AuditValue(snapshot.atWarCount, "?") .. "；" .. diplomacySample .. "。");
-    table.insert(lines, "外交修正：" .. diplomacyModifierSample .. "。");
-    table.insert(lines, "胜利进度：启用 " .. AuditValue(snapshot.enabledVictoryCount, "?") .. " 类；" .. victorySample .. "。");
-    table.insert(lines, "胜利说明：" .. victoryDetailSample .. "。");
+    table.insert(lines, "后台数据状态：Obelisk 已记录当前快照。");
+    table.insert(lines, "已采集：玩家产出、科技/市政、金币/信仰、城市、单位、资源、政策、外交、胜利、伟人、贸易路线、首城忠诚。");
+    table.insert(lines, "当前规模：回合 " .. tostring(snapshot.turn) .. "；城市 " .. tostring(snapshot.cityCount) .. "；单位 " .. AuditValue(snapshot.unitCount, "?") .. "；已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
+    table.insert(lines, "后台策略：完整数据只保留当前快照；历史只保存轻量摘要，用于回合对比和之后的 AI 上下文。");
+    table.insert(lines, "下一批后台数据：全城忠诚、商路明细、科技/市政候选、城邦使者、胜利深层指标。");
     return table.concat(lines, "[NEWLINE]");
   end
 
-  table.insert(lines, "Data audit: readable domains in this build.");
-  table.insert(lines, "Player yields: science/culture/gold read; faith " .. AuditStatus(snapshot.faithPerTurn, false) .. ", tourism " .. AuditStatus(snapshot.tourism, false) .. ", military " .. AuditStatus(snapshot.militaryStrength, false) .. ", score " .. AuditStatus(snapshot.score, false) .. ".");
-  table.insert(lines, "Era/tree: era " .. AuditValue(snapshot.eraName, "?") .. "; tech " .. snapshot.currentTech .. " (" .. tostring(snapshot.currentTechTurns) .. "); civic " .. snapshot.currentCivic .. " (" .. tostring(snapshot.currentCivicTurns) .. "); completed techs " .. AuditValue(snapshot.techCompletedCount, "?") .. "; completed civics " .. AuditValue(snapshot.civicCompletedCount, "?") .. ".");
-  table.insert(lines, "City detail: " .. cityDetail .. ".");
-  table.insert(lines, "Cities: read " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "; resources " .. AuditStatus(snapshot.resourceCount, false) .. " " .. AuditValue(snapshot.resourceCount, "?") .. ": bonus " .. tostring(snapshot.bonusResourceCount) .. ", luxury " .. tostring(snapshot.luxuryResourceCount) .. ", strategic " .. tostring(snapshot.strategicResourceCount) .. "; " .. resourceSample .. ".");
-  table.insert(lines, "City makeup: buildings " .. tostring(snapshot.buildingCount) .. ", districts " .. tostring(snapshot.districtCount) .. ", wonders " .. tostring(snapshot.wonderCount) .. ", trade routes " .. AuditValue(snapshot.tradeRouteActive, "?") .. "/" .. AuditValue(snapshot.tradeRouteCapacity, "?") .. ", capital loyalty " .. AuditValue(snapshot.firstCityLoyaltySummary, "?") .. ".");
-  table.insert(lines, "Religion/faith/GP: " .. snapshot.religionSummary .. "; faith bank " .. AuditValue(snapshot.faithBalance, "?") .. "; faith/turn " .. AuditValue(snapshot.faithPerTurn, "?") .. "; GP " .. greatPeopleSample .. ".");
-  table.insert(lines, "Units: " .. AuditStatus(snapshot.unitCount, false) .. " " .. AuditValue(snapshot.unitCount, "?") .. ": " .. unitSample .. "; details " .. unitDetailSample .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
-  table.insert(lines, "Government/policies: " .. AuditValue(snapshot.governmentName, "?") .. "; slots " .. AuditValue(snapshot.policySlotCount, "?") .. "; active " .. tostring(#snapshot.policyCards) .. ": " .. policySample .. ".");
-  table.insert(lines, "Citizens/plots: first city worked plots " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "; samples " .. workedPlotSample .. ".");
-  table.insert(lines, "Plot attribution: " .. plotDetailSample .. ".");
-  table.insert(lines, "Diplomacy detail: majors " .. AuditValue(snapshot.majorContacts, "?") .. ", minors " .. AuditValue(snapshot.minorContacts, "?") .. ", wars " .. AuditValue(snapshot.atWarCount, "?") .. "; " .. diplomacySample .. ".");
-  table.insert(lines, "Diplomacy modifiers: " .. diplomacyModifierSample .. ".");
-  table.insert(lines, "Victory progress: enabled " .. AuditValue(snapshot.enabledVictoryCount, "?") .. "; " .. victorySample .. ".");
-  table.insert(lines, "Victory text: " .. victoryDetailSample .. ".");
+  table.insert(lines, "Backend data status: Obelisk recorded the current snapshot.");
+  table.insert(lines, "Captured: yields, tech/civics, gold/faith, cities, units, resources, policies, diplomacy, victory, great people, trade routes, capital loyalty.");
+  table.insert(lines, "Current scale: turn " .. tostring(snapshot.turn) .. "; cities " .. tostring(snapshot.cityCount) .. "; units " .. AuditValue(snapshot.unitCount, "?") .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
+  table.insert(lines, "Storage policy: full data is current-snapshot only; history keeps compact summaries for comparison and future AI context.");
+  table.insert(lines, "Next backend batch: all-city loyalty, trade route details, tech/civic candidates, city-state envoys, deeper victory metrics.");
   return table.concat(lines, "[NEWLINE]");
 end
 
@@ -1158,7 +1114,7 @@ local function RefreshAnswer(mode:string, recordReason:string)
   end
 
   if currentMode == "audit" then
-    fallbackQuestion = isChinese and "Obelisk 现在能读到哪些数据？" or "What data can Obelisk read?";
+    fallbackQuestion = isChinese and "Obelisk 后台状态如何？" or "What is Obelisk's backend status?";
     answer = BuildAuditAnswer(snapshot, isChinese);
   end
 
@@ -1269,7 +1225,7 @@ local function Initialize()
   end
 
   if Controls.AuditButton ~= nil then
-    Controls.AuditButton:SetText(IsChineseUI() and "数据体检" or "Audit");
+    Controls.AuditButton:SetText(IsChineseUI() and "后台状态" or "Backend");
   end
 
   ContextPtr:SetUpdate(function(deltaTime:number)
