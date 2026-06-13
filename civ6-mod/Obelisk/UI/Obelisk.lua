@@ -113,6 +113,38 @@ local function GetLocalPlayerObject()
   return Players[localPlayerID];
 end
 
+local function LookupProductionName(productionHash:number)
+  if productionHash == nil or productionHash == 0 then
+    return "-";
+  end
+
+  for row in GameInfo.Units() do
+    if row.Hash == productionHash then
+      return Locale.Lookup(row.Name);
+    end
+  end
+
+  for row in GameInfo.Buildings() do
+    if row.Hash == productionHash then
+      return Locale.Lookup(row.Name);
+    end
+  end
+
+  for row in GameInfo.Districts() do
+    if row.Hash == productionHash then
+      return Locale.Lookup(row.Name);
+    end
+  end
+
+  for row in GameInfo.Projects() do
+    if row.Hash == productionHash then
+      return Locale.Lookup(row.Name);
+    end
+  end
+
+  return "-";
+end
+
 local function EncodeJournalProbe()
   local lastEntry:table = #journal > 0 and journal[#journal] or nil;
   local lastTurn:string = lastEntry ~= nil and tostring(lastEntry.turn or "-") or "-";
@@ -216,6 +248,7 @@ local function CollectSnapshot()
     firstCityPopulation = 0,
     firstCityProduction = "-",
     firstCityProductionTurns = -1,
+    cities = {},
     currentTech = "-",
     currentTechTurns = -1,
     currentCivic = "-",
@@ -261,52 +294,38 @@ local function CollectSnapshot()
   if player:GetCities() ~= nil then
     local cities:table = player:GetCities();
     snapshot.cityCount = cities:GetCount();
+    local cityIndex:number = 0;
 
     for _, city in cities:Members() do
-      snapshot.firstCityName = Locale.Lookup(city:GetName());
+      cityIndex = cityIndex + 1;
+      local citySnapshot:table = {
+        name = Locale.Lookup(city:GetName()),
+        population = 0,
+        production = "-",
+        productionTurns = -1
+      };
 
       if city:GetPopulation() ~= nil then
-        snapshot.firstCityPopulation = city:GetPopulation();
+        citySnapshot.population = city:GetPopulation();
       end
 
       if city:GetBuildQueue() ~= nil then
         local buildQueue:table = city:GetBuildQueue();
-        snapshot.firstCityProductionTurns = buildQueue:GetTurnsLeft();
+        citySnapshot.productionTurns = buildQueue:GetTurnsLeft();
 
         if buildQueue:GetCurrentProductionTypeHash() ~= nil then
-          local productionHash:number = buildQueue:GetCurrentProductionTypeHash();
-
-          for row in GameInfo.Units() do
-            if row.Hash == productionHash then
-              snapshot.firstCityProduction = Locale.Lookup(row.Name);
-              return snapshot;
-            end
-          end
-
-          for row in GameInfo.Buildings() do
-            if row.Hash == productionHash then
-              snapshot.firstCityProduction = Locale.Lookup(row.Name);
-              return snapshot;
-            end
-          end
-
-          for row in GameInfo.Districts() do
-            if row.Hash == productionHash then
-              snapshot.firstCityProduction = Locale.Lookup(row.Name);
-              return snapshot;
-            end
-          end
-
-          for row in GameInfo.Projects() do
-            if row.Hash == productionHash then
-              snapshot.firstCityProduction = Locale.Lookup(row.Name);
-              return snapshot;
-            end
-          end
+          citySnapshot.production = LookupProductionName(buildQueue:GetCurrentProductionTypeHash());
         end
       end
 
-      break;
+      table.insert(snapshot.cities, citySnapshot);
+
+      if cityIndex == 1 then
+        snapshot.firstCityName = citySnapshot.name;
+        snapshot.firstCityPopulation = citySnapshot.population;
+        snapshot.firstCityProduction = citySnapshot.production;
+        snapshot.firstCityProductionTurns = citySnapshot.productionTurns;
+      end
     end
   end
 
@@ -354,6 +373,47 @@ local function BuildDataAnswer(snapshot:table, isChinese:boolean)
     "Production: " .. snapshot.firstCityProduction .. " (" .. tostring(snapshot.firstCityProductionTurns) .. " turns left)[NEWLINE]" ..
     "Tech: " .. snapshot.currentTech .. " (" .. tostring(snapshot.currentTechTurns) .. " turns left)[NEWLINE]" ..
     "Civic: " .. snapshot.currentCivic .. " (" .. tostring(snapshot.currentCivicTurns) .. " turns left)";
+end
+
+local function BuildCitiesAnswer(snapshot:table, isChinese:boolean)
+  if snapshot.cityCount <= 0 or snapshot.cities == nil or #snapshot.cities <= 0 then
+    if isChinese then
+      return "城市总览：[NEWLINE]当前还没有可读取的城市。";
+    end
+
+    return "City overview:[NEWLINE]No readable cities yet.";
+  end
+
+  local lines:table = {};
+  local maxLines:number = math.min(#snapshot.cities, 6);
+
+  if isChinese then
+    table.insert(lines, "城市总览：共 " .. tostring(snapshot.cityCount) .. " 座城市。");
+
+    for index:number = 1, maxLines do
+      local city:table = snapshot.cities[index];
+      table.insert(lines, tostring(index) .. ". " .. city.name .. "：人口 " .. tostring(city.population) .. "，生产“" .. city.production .. "”，剩余 " .. tostring(city.productionTurns) .. " 回合。");
+    end
+
+    if #snapshot.cities > maxLines then
+      table.insert(lines, "另有 " .. tostring(#snapshot.cities - maxLines) .. " 座城市未在面板中展开。");
+    end
+
+    return table.concat(lines, "[NEWLINE]");
+  end
+
+  table.insert(lines, "City overview: " .. tostring(snapshot.cityCount) .. " cities.");
+
+  for index:number = 1, maxLines do
+    local city:table = snapshot.cities[index];
+    table.insert(lines, tostring(index) .. ". " .. city.name .. ": population " .. tostring(city.population) .. ", producing " .. city.production .. ", " .. tostring(city.productionTurns) .. " turns left.");
+  end
+
+  if #snapshot.cities > maxLines then
+    table.insert(lines, tostring(#snapshot.cities - maxLines) .. " more cities are not expanded in this panel.");
+  end
+
+  return table.concat(lines, "[NEWLINE]");
 end
 
 local function BuildAdviceAnswer(snapshot:table, isChinese:boolean)
@@ -471,6 +531,11 @@ local function RefreshAnswer(mode:string, recordReason:string)
     answer = BuildMemoryAnswer(snapshot, isChinese);
   end
 
+  if currentMode == "cities" then
+    fallbackQuestion = isChinese and "我现在有哪些城市？" or "What cities do I have?";
+    answer = BuildCitiesAnswer(snapshot, isChinese);
+  end
+
   if Controls.QuestionLabel ~= nil then
     Controls.QuestionLabel:SetText(fallbackQuestion);
   end
@@ -531,6 +596,10 @@ local function OnMemory()
   RefreshAnswer("memory");
 end
 
+local function OnCities()
+  RefreshAnswer("cities");
+end
+
 local function OnCollapse()
   SetExpanded(false);
 end
@@ -567,6 +636,10 @@ local function Initialize()
     Controls.MemoryButton:SetText(IsChineseUI() and "记忆状态" or "Memory");
   end
 
+  if Controls.CitiesButton ~= nil then
+    Controls.CitiesButton:SetText(IsChineseUI() and "城市总览" or "Cities");
+  end
+
   ContextPtr:SetUpdate(function(deltaTime:number)
     if isExpanded then
       collapseElapsed = collapseElapsed + deltaTime;
@@ -599,6 +672,10 @@ local function Initialize()
 
   if Controls.MemoryButton ~= nil then
     Controls.MemoryButton:RegisterCallback(Mouse.eLClick, OnMemory);
+  end
+
+  if Controls.CitiesButton ~= nil then
+    Controls.CitiesButton:RegisterCallback(Mouse.eLClick, OnCities);
   end
 
   if Events.LocalPlayerTurnBegin ~= nil then
