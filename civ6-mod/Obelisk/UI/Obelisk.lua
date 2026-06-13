@@ -67,6 +67,42 @@ local function FormatDelta(value:number)
   return tostring(value);
 end
 
+local function SafeText(value, fallback:string)
+  if value == nil or value == "" then
+    return fallback;
+  end
+
+  return tostring(value);
+end
+
+local function StatusText(value, isChinese:boolean)
+  local status:string = SafeText(value, "unknown");
+
+  if not isChinese then
+    return status;
+  end
+
+  if status == "saved" then
+    return "saved（已写入）";
+  elseif status == "loaded" then
+    return "loaded（已读回）";
+  elseif status == "loaded_legacy" then
+    return "loaded_legacy（读到旧格式）";
+  elseif status == "empty" then
+    return "empty（没有旧记录）";
+  elseif status == "unavailable" then
+    return "unavailable（接口不可用）";
+  elseif status == "save_failed" then
+    return "save_failed（写入失败）";
+  elseif status == "load_failed" then
+    return "load_failed（读取失败）";
+  elseif status == "not_checked" then
+    return "not_checked（未检查）";
+  end
+
+  return status;
+end
+
 local function GetLocalPlayerObject()
   local localPlayerID:number = Game.GetLocalPlayer();
 
@@ -77,24 +113,33 @@ local function GetLocalPlayerObject()
   return Players[localPlayerID];
 end
 
-local function CompactSnapshot(snapshot:table)
+local function EncodeJournalProbe()
+  local lastEntry:table = #journal > 0 and journal[#journal] or nil;
+  local lastTurn:string = lastEntry ~= nil and tostring(lastEntry.turn or "-") or "-";
+  local lastReason:string = lastEntry ~= nil and tostring(lastEntry.reason or "-") or "-";
+
+  return "v1|" ..
+    tostring(Game.GetCurrentGameTurn()) .. "|" ..
+    tostring(journalSequence) .. "|" ..
+    tostring(#journal) .. "|" ..
+    lastTurn .. "|" ..
+    lastReason;
+end
+
+local function DecodeJournalProbe(payload:string)
+  local parts:table = {};
+
+  for part in string.gmatch(payload or "", "([^|]+)") do
+    table.insert(parts, part);
+  end
+
   return {
-    turn = snapshot.turn,
-    reason = snapshot.reason,
-    sequence = snapshot.sequence,
-    science = snapshot.science,
-    culture = snapshot.culture,
-    goldBalance = snapshot.goldBalance,
-    goldPerTurn = snapshot.goldPerTurn,
-    cityCount = snapshot.cityCount,
-    firstCityName = snapshot.firstCityName,
-    firstCityPopulation = snapshot.firstCityPopulation,
-    firstCityProduction = snapshot.firstCityProduction,
-    firstCityProductionTurns = snapshot.firstCityProductionTurns,
-    currentTech = snapshot.currentTech,
-    currentTechTurns = snapshot.currentTechTurns,
-    currentCivic = snapshot.currentCivic,
-    currentCivicTurns = snapshot.currentCivicTurns
+    version = parts[1],
+    savedAtTurn = tonumber(parts[2]) or -1,
+    savedSequence = tonumber(parts[3]) or 0,
+    entryCount = tonumber(parts[4]) or 0,
+    lastTurn = parts[5] or "-",
+    lastReason = parts[6] or "-"
   };
 end
 
@@ -106,25 +151,14 @@ local function PersistJournal()
     return false;
   end
 
-  local compactJournal:table = {};
-
-  for index:number = 1, #journal do
-    table.insert(compactJournal, CompactSnapshot(journal[index]));
-  end
-
-  local payload:table = {
-    version = 1,
-    savedAtTurn = Game.GetCurrentGameTurn(),
-    savedSequence = journalSequence,
-    entries = compactJournal
-  };
+  local payload:string = EncodeJournalProbe();
 
   local success:boolean = pcall(function()
     player:SetProperty(JOURNAL_PROPERTY_KEY, payload);
   end);
 
   if success then
-    persistedEntryCount = #compactJournal;
+    persistedEntryCount = #journal;
     persistenceSaveStatus = "saved";
     return true;
   end
@@ -141,7 +175,7 @@ local function LoadPersistedJournal()
     return;
   end
 
-  local success:boolean, payload:table = pcall(function()
+  local success:boolean, payload = pcall(function()
     return player:GetProperty(JOURNAL_PROPERTY_KEY);
   end);
 
@@ -150,22 +184,23 @@ local function LoadPersistedJournal()
     return;
   end
 
-  if payload == nil or payload.entries == nil then
+  if payload == nil or payload == "" then
     persistenceLoadStatus = "empty";
     return;
   end
 
-  journal = {};
-
-  for index:number = 1, #payload.entries do
-    table.insert(journal, payload.entries[index]);
-
-    if payload.entries[index].sequence ~= nil and payload.entries[index].sequence > journalSequence then
-      journalSequence = payload.entries[index].sequence;
-    end
+  if type(payload) ~= "string" then
+    persistenceLoadStatus = "loaded_legacy";
+    return;
   end
 
-  persistedEntryCount = #journal;
+  local decoded:table = DecodeJournalProbe(payload);
+
+  if decoded.savedSequence > journalSequence then
+    journalSequence = decoded.savedSequence;
+  end
+
+  persistedEntryCount = decoded.entryCount;
   persistenceLoadStatus = "loaded";
 end
 
@@ -394,14 +429,16 @@ local function BuildMemoryAnswer(snapshot:table, isChinese:boolean)
   if isChinese then
     return "记忆状态：[NEWLINE]" ..
       "会话快照：" .. tostring(#journal) .. "/" .. tostring(MAX_JOURNAL_ENTRIES) .. " 条；已写入：" .. tostring(persistedEntryCount) .. " 条。[NEWLINE]" ..
-      "读取状态：" .. persistenceLoadStatus .. "；写入状态：" .. persistenceSaveStatus .. "。[NEWLINE]" ..
+      "读取状态：" .. StatusText(persistenceLoadStatus, true) .. "。[NEWLINE]" ..
+      "写入状态：" .. StatusText(persistenceSaveStatus, true) .. "。[NEWLINE]" ..
       "最后记录：回合 " .. lastTurn .. "，来源 " .. lastReason .. "。[NEWLINE]" ..
       "当前快照：回合 " .. tostring(snapshot.turn) .. "，城市 " .. tostring(snapshot.cityCount) .. "，金币 " .. tostring(snapshot.goldBalance) .. "。";
   end
 
   return "Memory status:[NEWLINE]" ..
     "Session snapshots: " .. tostring(#journal) .. "/" .. tostring(MAX_JOURNAL_ENTRIES) .. "; persisted: " .. tostring(persistedEntryCount) .. ".[NEWLINE]" ..
-    "Load status: " .. persistenceLoadStatus .. "; save status: " .. persistenceSaveStatus .. ".[NEWLINE]" ..
+    "Load status: " .. StatusText(persistenceLoadStatus, false) .. ".[NEWLINE]" ..
+    "Save status: " .. StatusText(persistenceSaveStatus, false) .. ".[NEWLINE]" ..
     "Last record: turn " .. lastTurn .. ", reason " .. lastReason .. ".[NEWLINE]" ..
     "Current snapshot: turn " .. tostring(snapshot.turn) .. ", cities " .. tostring(snapshot.cityCount) .. ", gold " .. tostring(snapshot.goldBalance) .. ".";
 end
