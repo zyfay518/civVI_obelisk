@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context>
-  <Container ID="ObeliskRoot" Anchor="C,T" Offset="0,48" Size="840,330" ConsumeMouse="0">
+  <Container ID="ObeliskRoot" Anchor="C,T" Offset="0,48" Size="840,380" ConsumeMouse="0">
     <Container ID="IdlePanel" Anchor="C,T" Size="360,46" ConsumeMouse="1">
       <Grid ID="IdleBackground" Anchor="C,C" Size="360,46" Texture="Controls_SubContainerFill" SliceCorner="12,12" SliceTextureSize="24,24" Color="255,255,255,70" />
       <Grid Anchor="C,C" Size="358,44" Texture="Controls_SubContainerFill" SliceCorner="12,12" SliceTextureSize="24,24" Color="255,255,255,22" />
       <TextButton ID="AskButton" Anchor="C,C" Size="336,34" String="Ask Obelisk..." FontSize="18" />
     </Container>
 
-    <Container ID="ExpandedPanel" Anchor="C,T" Offset="0,56" Size="840,274" ConsumeMouse="1" Hidden="1">
-      <Grid ID="AnswerBackground" Anchor="C,C" Size="840,274" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,82" />
-      <Grid Anchor="C,C" Size="836,270" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,24" />
+    <Container ID="ExpandedPanel" Anchor="C,T" Offset="0,56" Size="840,324" ConsumeMouse="1" Hidden="1">
+      <Grid ID="AnswerBackground" Anchor="C,C" Size="840,324" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,82" />
+      <Grid Anchor="C,C" Size="836,320" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,24" />
       <Label ID="QuestionLabel" Anchor="L,T" Offset="22,14" Size="774,26" String="What should I inspect right now?" FontSize="17" Color="255,255,255,255" />
       <TextButton ID="DataButton" Anchor="L,T" Offset="22,44" Size="108,30" String="当前数据" FontSize="13" />
       <TextButton ID="AdviceButton" Anchor="L,T" Offset="138,44" Size="108,30" String="规则建议" FontSize="13" />
       <TextButton ID="CompareButton" Anchor="L,T" Offset="254,44" Size="108,30" String="回合对比" FontSize="13" />
       <TextButton ID="MemoryButton" Anchor="L,T" Offset="370,44" Size="108,30" String="记忆状态" FontSize="13" />
       <TextButton ID="CitiesButton" Anchor="L,T" Offset="486,44" Size="108,30" String="城市总览" FontSize="13" />
+      <TextButton ID="AuditButton" Anchor="L,T" Offset="602,44" Size="108,30" String="数据体检" FontSize="13" />
       <Label ID="MetricsLabel" Anchor="L,T" Offset="22,82" Size="796,32" String="" FontSize="13" Color="78,74,62,255" Wrap="1" />
-      <Label ID="AnswerLabel" Anchor="L,T" Offset="22,118" Size="796,136" Wrap="1" FontSize="15" Color="28,24,18,255" String="" />
+      <Label ID="AnswerLabel" Anchor="L,T" Offset="22,118" Size="796,186" Wrap="1" FontSize="15" Color="28,24,18,255" String="" />
       <TextButton ID="CollapseButton" Anchor="R,T" Offset="-12,10" Size="30,26" String="X" FontSize="13" />
     </Container>
   </Container>

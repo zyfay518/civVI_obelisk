@@ -75,6 +75,32 @@ local function SafeText(value, fallback:string)
   return tostring(value);
 end
 
+local function SafeCall(fallback, callback)
+  local success:boolean, value = pcall(callback);
+
+  if success and value ~= nil then
+    return value;
+  end
+
+  return fallback;
+end
+
+local function AuditStatus(value, isChinese:boolean)
+  if value == nil then
+    return isChinese and "缺口" or "gap";
+  end
+
+  return isChinese and "已读" or "read";
+end
+
+local function AuditValue(value, fallback:string)
+  if value == nil then
+    return fallback;
+  end
+
+  return tostring(value);
+end
+
 local function StatusText(value, isChinese:boolean)
   local status:string = SafeText(value, "unknown");
 
@@ -249,6 +275,16 @@ local function CollectSnapshot()
     firstCityProduction = "-",
     firstCityProductionTurns = -1,
     cities = {},
+    faithBalance = nil,
+    faithPerTurn = nil,
+    tourism = nil,
+    score = nil,
+    militaryStrength = nil,
+    resourceCount = nil,
+    resourceSamples = {},
+    unitCount = nil,
+    unitSamples = {},
+    metCivilizations = nil,
     currentTech = "-",
     currentTechTurns = -1,
     currentCivic = "-",
@@ -291,6 +327,80 @@ local function CollectSnapshot()
     snapshot.goldPerTurn = Round(treasury:GetGoldYield() - treasury:GetTotalMaintenance());
   end
 
+  if player:GetReligion() ~= nil then
+    local religion:table = player:GetReligion();
+    snapshot.faithBalance = SafeCall(nil, function() return Round(religion:GetFaithBalance()); end);
+    snapshot.faithPerTurn = SafeCall(nil, function() return Round(religion:GetFaithYield()); end);
+  end
+
+  if player:GetStats() ~= nil then
+    local stats:table = player:GetStats();
+    snapshot.tourism = SafeCall(nil, function() return Round(stats:GetTourism()); end);
+    snapshot.militaryStrength = SafeCall(nil, function() return Round(stats:GetMilitaryStrength()); end);
+  end
+
+  snapshot.score = SafeCall(nil, function() return Round(player:GetScore()); end);
+
+  if player:GetResources() ~= nil then
+    local resources:table = player:GetResources();
+    local resourceCount:number = 0;
+
+    for resource in GameInfo.Resources() do
+      if resource.ResourceClassType ~= nil and resource.ResourceClassType ~= "RESOURCECLASS_ARTIFACT" then
+        local amount:number = SafeCall(0, function() return resources:GetResourceAmount(resource.ResourceType); end);
+
+        if amount > 0 then
+          resourceCount = resourceCount + 1;
+
+          if #snapshot.resourceSamples < 5 then
+            table.insert(snapshot.resourceSamples, Locale.Lookup(resource.Name) .. " " .. tostring(amount));
+          end
+        end
+      end
+    end
+
+    snapshot.resourceCount = resourceCount;
+  end
+
+  if player:GetUnits() ~= nil then
+    local units:table = player:GetUnits();
+    local unitCount:number = 0;
+
+    for _, unit in units:Members() do
+      unitCount = unitCount + 1;
+
+      if #snapshot.unitSamples < 5 then
+        local unitType:number = SafeCall(-1, function() return unit:GetType(); end);
+        local unitName:string = "-";
+
+        if unitType ~= -1 and GameInfo.Units[unitType] ~= nil then
+          unitName = Locale.Lookup(GameInfo.Units[unitType].Name);
+        end
+
+        table.insert(snapshot.unitSamples, unitName);
+      end
+    end
+
+    snapshot.unitCount = unitCount;
+  end
+
+  if player:GetDiplomacy() ~= nil then
+    local diplomacy:table = player:GetDiplomacy();
+    local metCount:number = 0;
+
+    for playerID:number = 0, 63 do
+      if playerID ~= Game.GetLocalPlayer() and Players[playerID] ~= nil then
+        local hasMet:boolean = SafeCall(false, function() return diplomacy:HasMet(playerID); end);
+
+        if hasMet then
+          metCount = metCount + 1;
+        end
+      end
+    end
+
+    snapshot.metCivilizations = metCount;
+  end
+
   if player:GetCities() ~= nil then
     local cities:table = player:GetCities();
     snapshot.cityCount = cities:GetCount();
@@ -302,11 +412,29 @@ local function CollectSnapshot()
         name = Locale.Lookup(city:GetName()),
         population = 0,
         production = "-",
-        productionTurns = -1
+        productionTurns = -1,
+        food = nil,
+        foodSurplus = nil,
+        housing = nil,
+        amenities = nil,
+        amenitiesNeeded = nil,
+        yields = {}
       };
 
-      if city:GetPopulation() ~= nil then
-        citySnapshot.population = city:GetPopulation();
+      citySnapshot.population = SafeCall(0, function() return city:GetPopulation(); end);
+      citySnapshot.yields.food = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.FOOD)); end);
+      citySnapshot.yields.production = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.PRODUCTION)); end);
+      citySnapshot.yields.science = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.SCIENCE)); end);
+      citySnapshot.yields.culture = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.CULTURE)); end);
+      citySnapshot.yields.gold = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.GOLD)); end);
+
+      if city:GetGrowth() ~= nil then
+        local growth:table = city:GetGrowth();
+        citySnapshot.food = SafeCall(nil, function() return Round(growth:GetFood()); end);
+        citySnapshot.foodSurplus = SafeCall(nil, function() return Round(growth:GetFoodSurplus()); end);
+        citySnapshot.housing = SafeCall(nil, function() return Round(growth:GetHousing()); end);
+        citySnapshot.amenities = SafeCall(nil, function() return growth:GetAmenities(); end);
+        citySnapshot.amenitiesNeeded = SafeCall(nil, function() return growth:GetAmenitiesNeeded(); end);
       end
 
       if city:GetBuildQueue() ~= nil then
@@ -413,6 +541,41 @@ local function BuildCitiesAnswer(snapshot:table, isChinese:boolean)
     table.insert(lines, tostring(#snapshot.cities - maxLines) .. " more cities are not expanded in this panel.");
   end
 
+  return table.concat(lines, "[NEWLINE]");
+end
+
+local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
+  local lines:table = {};
+  local resourceSample:string = (#snapshot.resourceSamples > 0) and table.concat(snapshot.resourceSamples, "、") or "-";
+  local unitSample:string = (#snapshot.unitSamples > 0) and table.concat(snapshot.unitSamples, "、") or "-";
+  local firstCity:table = (#snapshot.cities > 0) and snapshot.cities[1] or nil;
+  local cityDetail:string = "-";
+
+  if firstCity ~= nil then
+    cityDetail = firstCity.name ..
+      " 人口" .. tostring(firstCity.population) ..
+      " 食物" .. AuditValue(firstCity.foodSurplus, "?") ..
+      " 住房" .. AuditValue(firstCity.housing, "?") ..
+      " 宜居" .. AuditValue(firstCity.amenities, "?") .. "/" .. AuditValue(firstCity.amenitiesNeeded, "?") ..
+      " 产能" .. AuditValue(firstCity.yields.production, "?");
+  end
+
+  if isChinese then
+    table.insert(lines, "数据体检：下面是 Obelisk 现在能直接读到的数据域。");
+    table.insert(lines, "玩家产出：科技/文化/金币已读；信仰 " .. AuditStatus(snapshot.faithPerTurn, true) .. "，旅游 " .. AuditStatus(snapshot.tourism, true) .. "，军力 " .. AuditStatus(snapshot.militaryStrength, true) .. "，分数 " .. AuditStatus(snapshot.score, true) .. "。");
+    table.insert(lines, "城市细节：" .. cityDetail .. "。");
+    table.insert(lines, "全城列表：已读 " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "；资源 " .. AuditStatus(snapshot.resourceCount, true) .. " " .. AuditValue(snapshot.resourceCount, "?") .. " 类：" .. resourceSample .. "。");
+    table.insert(lines, "单位：" .. AuditStatus(snapshot.unitCount, true) .. " " .. AuditValue(snapshot.unitCount, "?") .. " 个：" .. unitSample .. "；外交已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
+    table.insert(lines, "已知缺口：地块级可见收益、政策槽/政体、详细外交关系、胜利进度还没有进入本面板。");
+    return table.concat(lines, "[NEWLINE]");
+  end
+
+  table.insert(lines, "Data audit: readable domains in this build.");
+  table.insert(lines, "Player yields: science/culture/gold read; faith " .. AuditStatus(snapshot.faithPerTurn, false) .. ", tourism " .. AuditStatus(snapshot.tourism, false) .. ", military " .. AuditStatus(snapshot.militaryStrength, false) .. ", score " .. AuditStatus(snapshot.score, false) .. ".");
+  table.insert(lines, "City detail: " .. cityDetail .. ".");
+  table.insert(lines, "Cities: read " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "; resources " .. AuditStatus(snapshot.resourceCount, false) .. " " .. AuditValue(snapshot.resourceCount, "?") .. ": " .. resourceSample .. ".");
+  table.insert(lines, "Units: " .. AuditStatus(snapshot.unitCount, false) .. " " .. AuditValue(snapshot.unitCount, "?") .. ": " .. unitSample .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
+  table.insert(lines, "Known gaps: visible plot yields, policies/government, detailed diplomacy, and victory progress are not in this panel yet.");
   return table.concat(lines, "[NEWLINE]");
 end
 
@@ -536,6 +699,11 @@ local function RefreshAnswer(mode:string, recordReason:string)
     answer = BuildCitiesAnswer(snapshot, isChinese);
   end
 
+  if currentMode == "audit" then
+    fallbackQuestion = isChinese and "Obelisk 现在能读到哪些数据？" or "What data can Obelisk read?";
+    answer = BuildAuditAnswer(snapshot, isChinese);
+  end
+
   if Controls.QuestionLabel ~= nil then
     Controls.QuestionLabel:SetText(fallbackQuestion);
   end
@@ -600,6 +768,10 @@ local function OnCities()
   RefreshAnswer("cities");
 end
 
+local function OnAudit()
+  RefreshAnswer("audit");
+end
+
 local function OnCollapse()
   SetExpanded(false);
 end
@@ -640,6 +812,10 @@ local function Initialize()
     Controls.CitiesButton:SetText(IsChineseUI() and "城市总览" or "Cities");
   end
 
+  if Controls.AuditButton ~= nil then
+    Controls.AuditButton:SetText(IsChineseUI() and "数据体检" or "Audit");
+  end
+
   ContextPtr:SetUpdate(function(deltaTime:number)
     if isExpanded then
       collapseElapsed = collapseElapsed + deltaTime;
@@ -676,6 +852,10 @@ local function Initialize()
 
   if Controls.CitiesButton ~= nil then
     Controls.CitiesButton:RegisterCallback(Mouse.eLClick, OnCities);
+  end
+
+  if Controls.AuditButton ~= nil then
+    Controls.AuditButton:RegisterCallback(Mouse.eLClick, OnAudit);
   end
 
   if Events.LocalPlayerTurnBegin ~= nil then
