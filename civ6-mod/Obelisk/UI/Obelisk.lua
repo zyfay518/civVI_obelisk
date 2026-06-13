@@ -328,7 +328,11 @@ local function CollectSnapshot()
     currentTech = "-",
     currentTechTurns = -1,
     currentCivic = "-",
-    currentCivicTurns = -1
+    currentCivicTurns = -1,
+    eraName = nil,
+    techCompletedCount = nil,
+    civicCompletedCount = nil,
+    unitDetailSamples = {}
   };
 
   local player:table = GetLocalPlayerObject();
@@ -348,6 +352,16 @@ local function CollectSnapshot()
       snapshot.currentTech = Locale.Lookup(GameInfo.Technologies[techID].Name);
       snapshot.currentTechTurns = SafeCall(-1, function() return techs:GetTurnsLeft(); end);
     end
+
+    local completedTechs:number = 0;
+
+    for tech in GameInfo.Technologies() do
+      if SafeCall(false, function() return techs:HasTech(tech.Index); end) then
+        completedTechs = completedTechs + 1;
+      end
+    end
+
+    snapshot.techCompletedCount = completedTechs;
   end
 
   local culture:table = SafeComponent(player, "GetCulture");
@@ -361,6 +375,16 @@ local function CollectSnapshot()
       snapshot.currentCivic = Locale.Lookup(GameInfo.Civics[civicID].Name);
       snapshot.currentCivicTurns = SafeCall(-1, function() return culture:GetTurnsLeft(); end);
     end
+
+    local completedCivics:number = 0;
+
+    for civic in GameInfo.Civics() do
+      if SafeCall(false, function() return culture:HasCivic(civic.Index); end) then
+        completedCivics = completedCivics + 1;
+      end
+    end
+
+    snapshot.civicCompletedCount = completedCivics;
 
     local governmentID:number = SafeCall(-1, function() return culture:GetCurrentGovernment(); end);
 
@@ -411,6 +435,7 @@ local function CollectSnapshot()
   end
 
   snapshot.score = SafeCall(nil, function() return Round(player:GetScore()); end);
+  snapshot.eraName = LookupIndexedName(GameInfo.Eras, SafeCall(-1, function() return player:GetEra(); end), nil);
 
   local resources:table = SafeComponent(player, "GetResources");
 
@@ -451,6 +476,16 @@ local function CollectSnapshot()
         end
 
         table.insert(snapshot.unitSamples, unitName);
+
+        if #snapshot.unitDetailSamples < 5 then
+          local experience:table = SafeCall(nil, function() return unit:GetExperience(); end);
+          local xp:number = experience ~= nil and SafeCall(0, function() return experience:GetExperiencePoints(); end) or 0;
+          table.insert(snapshot.unitDetailSamples, unitName ..
+            "@(" .. tostring(SafeCall(-1, function() return unit:GetX(); end)) .. "," .. tostring(SafeCall(-1, function() return unit:GetY(); end)) .. ")" ..
+            " 伤" .. tostring(SafeCall(0, function() return unit:GetDamage(); end)) ..
+            " 移" .. tostring(SafeCall(0, function() return unit:GetMovesRemaining(); end)) ..
+            " XP" .. tostring(xp));
+        end
       end
     end
 
@@ -800,6 +835,7 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   local lines:table = {};
   local resourceSample:string = (#snapshot.resourceSamples > 0) and table.concat(snapshot.resourceSamples, "、") or "-";
   local unitSample:string = (#snapshot.unitSamples > 0) and table.concat(snapshot.unitSamples, "、") or "-";
+  local unitDetailSample:string = (#snapshot.unitDetailSamples > 0) and table.concat(snapshot.unitDetailSamples, "、") or "-";
   local policySample:string = (#snapshot.policyCards > 0) and table.concat(snapshot.policyCards, "、") or "-";
   local diplomacySample:string = (#snapshot.diplomacySamples > 0) and table.concat(snapshot.diplomacySamples, "、") or "-";
   local diplomacyModifierSample:string = (#snapshot.diplomacyModifierSamples > 0) and table.concat(snapshot.diplomacyModifierSamples, "、") or "-";
@@ -824,9 +860,10 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   if isChinese then
     table.insert(lines, "数据体检：下面是 Obelisk 现在能直接读到的数据域。");
     table.insert(lines, "玩家产出：科技/文化/金币已读；信仰 " .. AuditStatus(snapshot.faithPerTurn, true) .. "，旅游 " .. AuditStatus(snapshot.tourism, true) .. "，军力 " .. AuditStatus(snapshot.militaryStrength, true) .. "，分数 " .. AuditStatus(snapshot.score, true) .. "。");
+    table.insert(lines, "时代/树：时代 " .. AuditValue(snapshot.eraName, "?") .. "；当前科技 " .. snapshot.currentTech .. "（" .. tostring(snapshot.currentTechTurns) .. " 回合）；当前市政 " .. snapshot.currentCivic .. "（" .. tostring(snapshot.currentCivicTurns) .. " 回合）；科技已完成 " .. AuditValue(snapshot.techCompletedCount, "?") .. "；市政已完成 " .. AuditValue(snapshot.civicCompletedCount, "?") .. "。");
     table.insert(lines, "城市细节：" .. cityDetail .. "。");
     table.insert(lines, "全城列表：已读 " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "；资源 " .. AuditStatus(snapshot.resourceCount, true) .. " " .. AuditValue(snapshot.resourceCount, "?") .. " 类：" .. resourceSample .. "。");
-    table.insert(lines, "单位：" .. AuditStatus(snapshot.unitCount, true) .. " " .. AuditValue(snapshot.unitCount, "?") .. " 个：" .. unitSample .. "；外交已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
+    table.insert(lines, "单位：" .. AuditStatus(snapshot.unitCount, true) .. " " .. AuditValue(snapshot.unitCount, "?") .. " 个：" .. unitSample .. "；明细 " .. unitDetailSample .. "；外交已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
     table.insert(lines, "政体/政策：" .. AuditValue(snapshot.governmentName, "?") .. "；槽位 " .. AuditValue(snapshot.policySlotCount, "?") .. "；已挂 " .. tostring(#snapshot.policyCards) .. "：" .. policySample .. "。");
     table.insert(lines, "公民/地块：首城工作地块 " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "；样例 " .. workedPlotSample .. "。");
     table.insert(lines, "地块归因：" .. plotDetailSample .. "。");
@@ -839,9 +876,10 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
 
   table.insert(lines, "Data audit: readable domains in this build.");
   table.insert(lines, "Player yields: science/culture/gold read; faith " .. AuditStatus(snapshot.faithPerTurn, false) .. ", tourism " .. AuditStatus(snapshot.tourism, false) .. ", military " .. AuditStatus(snapshot.militaryStrength, false) .. ", score " .. AuditStatus(snapshot.score, false) .. ".");
+  table.insert(lines, "Era/tree: era " .. AuditValue(snapshot.eraName, "?") .. "; tech " .. snapshot.currentTech .. " (" .. tostring(snapshot.currentTechTurns) .. "); civic " .. snapshot.currentCivic .. " (" .. tostring(snapshot.currentCivicTurns) .. "); completed techs " .. AuditValue(snapshot.techCompletedCount, "?") .. "; completed civics " .. AuditValue(snapshot.civicCompletedCount, "?") .. ".");
   table.insert(lines, "City detail: " .. cityDetail .. ".");
   table.insert(lines, "Cities: read " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "; resources " .. AuditStatus(snapshot.resourceCount, false) .. " " .. AuditValue(snapshot.resourceCount, "?") .. ": " .. resourceSample .. ".");
-  table.insert(lines, "Units: " .. AuditStatus(snapshot.unitCount, false) .. " " .. AuditValue(snapshot.unitCount, "?") .. ": " .. unitSample .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
+  table.insert(lines, "Units: " .. AuditStatus(snapshot.unitCount, false) .. " " .. AuditValue(snapshot.unitCount, "?") .. ": " .. unitSample .. "; details " .. unitDetailSample .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
   table.insert(lines, "Government/policies: " .. AuditValue(snapshot.governmentName, "?") .. "; slots " .. AuditValue(snapshot.policySlotCount, "?") .. "; active " .. tostring(#snapshot.policyCards) .. ": " .. policySample .. ".");
   table.insert(lines, "Citizens/plots: first city worked plots " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "; samples " .. workedPlotSample .. ".");
   table.insert(lines, "Plot attribution: " .. plotDetailSample .. ".");
