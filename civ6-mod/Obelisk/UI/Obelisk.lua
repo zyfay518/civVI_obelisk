@@ -332,7 +332,10 @@ local function CollectSnapshot()
     eraName = nil,
     techCompletedCount = nil,
     civicCompletedCount = nil,
-    unitDetailSamples = {}
+    unitDetailSamples = {},
+    buildingCount = 0,
+    districtCount = 0,
+    wonderCount = 0
   };
 
   local player:table = GetLocalPlayerObject();
@@ -651,6 +654,9 @@ local function CollectSnapshot()
         workedPlotCount = nil,
         workedPlotSamples = {},
         plotDetailSamples = {},
+        buildingCount = 0,
+        districtCount = 0,
+        wonderCount = 0,
         yields = {}
       };
 
@@ -709,6 +715,38 @@ local function CollectSnapshot()
         citySnapshot.workedPlotCount = workedPlotCount;
       end
 
+      local cityBuildings:table = SafeComponent(city, "GetBuildings");
+
+      if cityBuildings ~= nil and cityPlots ~= nil then
+        for _, plotID in pairs(cityPlots) do
+          local buildingTypes:table = SafeCall({}, function() return cityBuildings:GetBuildingsAtLocation(plotID); end);
+
+          if type(buildingTypes) == "table" then
+            for _, buildingType in ipairs(buildingTypes) do
+              citySnapshot.buildingCount = citySnapshot.buildingCount + 1;
+
+              if GameInfo.Buildings[buildingType] ~= nil and GameInfo.Buildings[buildingType].IsWonder then
+                citySnapshot.wonderCount = citySnapshot.wonderCount + 1;
+              end
+            end
+          end
+        end
+      end
+
+      local cityDistricts:table = SafeComponent(city, "GetDistricts");
+
+      if cityDistricts ~= nil then
+        citySnapshot.districtCount = SafeCall(0, function()
+          local count:number = 0;
+
+          for _, district in cityDistricts:Members() do
+            count = count + 1;
+          end
+
+          return count;
+        end);
+      end
+
       local buildQueue:table = SafeComponent(city, "GetBuildQueue");
 
       if buildQueue ~= nil then
@@ -722,6 +760,9 @@ local function CollectSnapshot()
       end
 
       table.insert(snapshot.cities, citySnapshot);
+      snapshot.buildingCount = snapshot.buildingCount + citySnapshot.buildingCount;
+      snapshot.districtCount = snapshot.districtCount + citySnapshot.districtCount;
+      snapshot.wonderCount = snapshot.wonderCount + citySnapshot.wonderCount;
 
       if cityIndex == 1 then
         snapshot.firstCityName = citySnapshot.name;
@@ -863,6 +904,7 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
     table.insert(lines, "时代/树：时代 " .. AuditValue(snapshot.eraName, "?") .. "；当前科技 " .. snapshot.currentTech .. "（" .. tostring(snapshot.currentTechTurns) .. " 回合）；当前市政 " .. snapshot.currentCivic .. "（" .. tostring(snapshot.currentCivicTurns) .. " 回合）；科技已完成 " .. AuditValue(snapshot.techCompletedCount, "?") .. "；市政已完成 " .. AuditValue(snapshot.civicCompletedCount, "?") .. "。");
     table.insert(lines, "城市细节：" .. cityDetail .. "。");
     table.insert(lines, "全城列表：已读 " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "；资源 " .. AuditStatus(snapshot.resourceCount, true) .. " " .. AuditValue(snapshot.resourceCount, "?") .. " 类：" .. resourceSample .. "。");
+    table.insert(lines, "城市构成：建筑 " .. tostring(snapshot.buildingCount) .. "，区域 " .. tostring(snapshot.districtCount) .. "，奇观 " .. tostring(snapshot.wonderCount) .. "。");
     table.insert(lines, "单位：" .. AuditStatus(snapshot.unitCount, true) .. " " .. AuditValue(snapshot.unitCount, "?") .. " 个：" .. unitSample .. "；明细 " .. unitDetailSample .. "；外交已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
     table.insert(lines, "政体/政策：" .. AuditValue(snapshot.governmentName, "?") .. "；槽位 " .. AuditValue(snapshot.policySlotCount, "?") .. "；已挂 " .. tostring(#snapshot.policyCards) .. "：" .. policySample .. "。");
     table.insert(lines, "公民/地块：首城工作地块 " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "；样例 " .. workedPlotSample .. "。");
@@ -879,6 +921,7 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   table.insert(lines, "Era/tree: era " .. AuditValue(snapshot.eraName, "?") .. "; tech " .. snapshot.currentTech .. " (" .. tostring(snapshot.currentTechTurns) .. "); civic " .. snapshot.currentCivic .. " (" .. tostring(snapshot.currentCivicTurns) .. "); completed techs " .. AuditValue(snapshot.techCompletedCount, "?") .. "; completed civics " .. AuditValue(snapshot.civicCompletedCount, "?") .. ".");
   table.insert(lines, "City detail: " .. cityDetail .. ".");
   table.insert(lines, "Cities: read " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "; resources " .. AuditStatus(snapshot.resourceCount, false) .. " " .. AuditValue(snapshot.resourceCount, "?") .. ": " .. resourceSample .. ".");
+  table.insert(lines, "City makeup: buildings " .. tostring(snapshot.buildingCount) .. ", districts " .. tostring(snapshot.districtCount) .. ", wonders " .. tostring(snapshot.wonderCount) .. ".");
   table.insert(lines, "Units: " .. AuditStatus(snapshot.unitCount, false) .. " " .. AuditValue(snapshot.unitCount, "?") .. ": " .. unitSample .. "; details " .. unitDetailSample .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
   table.insert(lines, "Government/policies: " .. AuditValue(snapshot.governmentName, "?") .. "; slots " .. AuditValue(snapshot.policySlotCount, "?") .. "; active " .. tostring(#snapshot.policyCards) .. ": " .. policySample .. ".");
   table.insert(lines, "Citizens/plots: first city worked plots " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "; samples " .. workedPlotSample .. ".");
