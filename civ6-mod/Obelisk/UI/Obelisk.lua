@@ -368,7 +368,9 @@ local function CollectSnapshot()
     unitDetailSamples = {},
     buildingCount = 0,
     districtCount = 0,
-    wonderCount = 0
+    wonderCount = 0,
+    tradeRouteActive = nil,
+    tradeRouteCapacity = nil
   };
 
   local player:table = GetLocalPlayerObject();
@@ -471,6 +473,13 @@ local function CollectSnapshot()
   if stats ~= nil then
     snapshot.tourism = SafeCall(nil, function() return Round(stats:GetTourism()); end);
     snapshot.militaryStrength = SafeCall(nil, function() return Round(stats:GetMilitaryStrength()); end);
+  end
+
+  local playerTrade:table = SafeComponent(player, "GetTrade");
+
+  if playerTrade ~= nil then
+    snapshot.tradeRouteActive = SafeCall(nil, function() return playerTrade:GetNumOutgoingRoutes(); end);
+    snapshot.tradeRouteCapacity = SafeCall(nil, function() return playerTrade:GetOutgoingRouteCapacity(); end);
   end
 
   local greatPeoplePoints:table = SafeComponent(player, "GetGreatPeoplePoints");
@@ -962,7 +971,7 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
     table.insert(lines, "时代/树：时代 " .. AuditValue(snapshot.eraName, "?") .. "；当前科技 " .. snapshot.currentTech .. "（" .. tostring(snapshot.currentTechTurns) .. " 回合）；当前市政 " .. snapshot.currentCivic .. "（" .. tostring(snapshot.currentCivicTurns) .. " 回合）；科技已完成 " .. AuditValue(snapshot.techCompletedCount, "?") .. "；市政已完成 " .. AuditValue(snapshot.civicCompletedCount, "?") .. "。");
     table.insert(lines, "城市细节：" .. cityDetail .. "。");
     table.insert(lines, "全城列表：已读 " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "；资源 " .. AuditStatus(snapshot.resourceCount, true) .. " " .. AuditValue(snapshot.resourceCount, "?") .. " 类：加成" .. tostring(snapshot.bonusResourceCount) .. " 奢侈" .. tostring(snapshot.luxuryResourceCount) .. " 战略" .. tostring(snapshot.strategicResourceCount) .. "；" .. resourceSample .. "。");
-    table.insert(lines, "城市构成：建筑 " .. tostring(snapshot.buildingCount) .. "，区域 " .. tostring(snapshot.districtCount) .. "，奇观 " .. tostring(snapshot.wonderCount) .. "。");
+    table.insert(lines, "城市构成：建筑 " .. tostring(snapshot.buildingCount) .. "，区域 " .. tostring(snapshot.districtCount) .. "，奇观 " .. tostring(snapshot.wonderCount) .. "，贸易路线 " .. AuditValue(snapshot.tradeRouteActive, "?") .. "/" .. AuditValue(snapshot.tradeRouteCapacity, "?") .. "。");
     table.insert(lines, "宗教/信仰/伟人：" .. snapshot.religionSummary .. "；信仰库存 " .. AuditValue(snapshot.faithBalance, "?") .. "；信仰/回合 " .. AuditValue(snapshot.faithPerTurn, "?") .. "；伟人 " .. greatPeopleSample .. "。");
     table.insert(lines, "单位：" .. AuditStatus(snapshot.unitCount, true) .. " " .. AuditValue(snapshot.unitCount, "?") .. " 个：" .. unitSample .. "；明细 " .. unitDetailSample .. "；外交已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
     table.insert(lines, "政体/政策：" .. AuditValue(snapshot.governmentName, "?") .. "；槽位 " .. AuditValue(snapshot.policySlotCount, "?") .. "；已挂 " .. tostring(#snapshot.policyCards) .. "：" .. policySample .. "。");
@@ -980,7 +989,7 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   table.insert(lines, "Era/tree: era " .. AuditValue(snapshot.eraName, "?") .. "; tech " .. snapshot.currentTech .. " (" .. tostring(snapshot.currentTechTurns) .. "); civic " .. snapshot.currentCivic .. " (" .. tostring(snapshot.currentCivicTurns) .. "); completed techs " .. AuditValue(snapshot.techCompletedCount, "?") .. "; completed civics " .. AuditValue(snapshot.civicCompletedCount, "?") .. ".");
   table.insert(lines, "City detail: " .. cityDetail .. ".");
   table.insert(lines, "Cities: read " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "; resources " .. AuditStatus(snapshot.resourceCount, false) .. " " .. AuditValue(snapshot.resourceCount, "?") .. ": bonus " .. tostring(snapshot.bonusResourceCount) .. ", luxury " .. tostring(snapshot.luxuryResourceCount) .. ", strategic " .. tostring(snapshot.strategicResourceCount) .. "; " .. resourceSample .. ".");
-  table.insert(lines, "City makeup: buildings " .. tostring(snapshot.buildingCount) .. ", districts " .. tostring(snapshot.districtCount) .. ", wonders " .. tostring(snapshot.wonderCount) .. ".");
+  table.insert(lines, "City makeup: buildings " .. tostring(snapshot.buildingCount) .. ", districts " .. tostring(snapshot.districtCount) .. ", wonders " .. tostring(snapshot.wonderCount) .. ", trade routes " .. AuditValue(snapshot.tradeRouteActive, "?") .. "/" .. AuditValue(snapshot.tradeRouteCapacity, "?") .. ".");
   table.insert(lines, "Religion/faith/GP: " .. snapshot.religionSummary .. "; faith bank " .. AuditValue(snapshot.faithBalance, "?") .. "; faith/turn " .. AuditValue(snapshot.faithPerTurn, "?") .. "; GP " .. greatPeopleSample .. ".");
   table.insert(lines, "Units: " .. AuditStatus(snapshot.unitCount, false) .. " " .. AuditValue(snapshot.unitCount, "?") .. ": " .. unitSample .. "; details " .. unitDetailSample .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
   table.insert(lines, "Government/policies: " .. AuditValue(snapshot.governmentName, "?") .. "; slots " .. AuditValue(snapshot.policySlotCount, "?") .. "; active " .. tostring(#snapshot.policyCards) .. ": " .. policySample .. ".");
