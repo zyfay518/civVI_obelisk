@@ -119,6 +119,40 @@ local function FormatYieldSet(food, production, gold, science, culture, faith, i
     " Fa" .. tostring(faith or 0);
 end
 
+local function LookupIndexedName(infoTable, index:number, fallback:string)
+  if index == nil or index < 0 or infoTable == nil or infoTable[index] == nil then
+    return fallback;
+  end
+
+  return Locale.Lookup(infoTable[index].Name);
+end
+
+local function FormatPlotDetail(plot:table, ownerCityName:string)
+  local terrainName:string = LookupIndexedName(GameInfo.Terrains, SafeCall(-1, function() return plot:GetTerrainType(); end), "-");
+  local featureName:string = LookupIndexedName(GameInfo.Features, SafeCall(-1, function() return plot:GetFeatureType(); end), "-");
+  local resourceName:string = LookupIndexedName(GameInfo.Resources, SafeCall(-1, function() return plot:GetResourceType(); end), "-");
+  local improvementName:string = LookupIndexedName(GameInfo.Improvements, SafeCall(-1, function() return plot:GetImprovementType(); end), "-");
+  local districtName:string = LookupIndexedName(GameInfo.Districts, SafeCall(-1, function() return plot:GetDistrictType(); end), "-");
+  local x:number = SafeCall(-1, function() return plot:GetX(); end);
+  local y:number = SafeCall(-1, function() return plot:GetY(); end);
+
+  return "(" .. tostring(x) .. "," .. tostring(y) .. ") " ..
+    terrainName .. "/" .. featureName ..
+    " 资源" .. resourceName ..
+    " 改良" .. improvementName ..
+    " 区域" .. districtName ..
+    " 城市" .. ownerCityName ..
+    " " .. FormatYieldSet(
+      SafeCall(0, function() return plot:GetYield(YieldTypes.FOOD); end),
+      SafeCall(0, function() return plot:GetYield(YieldTypes.PRODUCTION); end),
+      SafeCall(0, function() return plot:GetYield(YieldTypes.GOLD); end),
+      SafeCall(0, function() return plot:GetYield(YieldTypes.SCIENCE); end),
+      SafeCall(0, function() return plot:GetYield(YieldTypes.CULTURE); end),
+      SafeCall(0, function() return plot:GetYield(YieldTypes.FAITH); end),
+      true
+    );
+end
+
 local function StatusText(value, isChinese:boolean)
   local status:string = SafeText(value, "unknown");
 
@@ -310,8 +344,10 @@ local function CollectSnapshot()
     minorContacts = nil,
     atWarCount = nil,
     diplomacySamples = {},
+    diplomacyModifierSamples = {},
     enabledVictoryCount = nil,
     victorySamples = {},
+    victoryDetailSamples = {},
     currentTech = "-",
     currentTechTurns = -1,
     currentCivic = "-",
@@ -516,6 +552,23 @@ local function CollectSnapshot()
             end
 
             table.insert(snapshot.diplomacySamples, displayName .. " " .. relationName);
+
+            local modifiers:table = SafeCall(nil, function() return diplomaticAI:GetDiplomaticModifiers(localPlayerID); end);
+
+            if modifiers ~= nil and #snapshot.diplomacyModifierSamples < 4 then
+              local modifierText:string = "-";
+
+              if type(modifiers) == "table" then
+                for _, modifier in pairs(modifiers) do
+                  modifierText = tostring(modifier);
+                  break;
+                end
+              else
+                modifierText = tostring(modifiers);
+              end
+
+              table.insert(snapshot.diplomacyModifierSamples, displayName .. "：" .. modifierText);
+            end
           end
         end
       end
@@ -540,6 +593,18 @@ local function CollectSnapshot()
         end
 
         table.insert(snapshot.victorySamples, Locale.Lookup(victory.Name) .. " " .. AuditValue(progress, "?"));
+
+        if #snapshot.victoryDetailSamples < 4 then
+          local description:string = "-";
+
+          if victory.Description ~= nil then
+            description = Locale.Lookup(victory.Description);
+          elseif victory.RequirementSetId ~= nil then
+            description = "RequirementSet " .. tostring(victory.RequirementSetId);
+          end
+
+          table.insert(snapshot.victoryDetailSamples, Locale.Lookup(victory.Name) .. "：" .. description);
+        end
       end
     end
   end
@@ -563,6 +628,7 @@ local function CollectSnapshot()
         amenitiesNeeded = nil,
         workedPlotCount = nil,
         workedPlotSamples = {},
+        plotDetailSamples = {},
         yields = {}
       };
 
@@ -606,6 +672,12 @@ local function CollectSnapshot()
                   SafeCall(0, function() return plot:GetYield(YieldTypes.FAITH); end),
                   true
                 ));
+              end
+
+              if #citySnapshot.plotDetailSamples < 3 then
+                local ownerCity:table = SafeCall(nil, function() return Cities.GetPlotPurchaseCity(plot); end);
+                local ownerCityName:string = ownerCity ~= nil and Locale.Lookup(ownerCity:GetName()) or "-";
+                table.insert(citySnapshot.plotDetailSamples, FormatPlotDetail(plot, ownerCityName));
               end
             end
           end
@@ -727,13 +799,17 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   local unitSample:string = (#snapshot.unitSamples > 0) and table.concat(snapshot.unitSamples, "、") or "-";
   local policySample:string = (#snapshot.policyCards > 0) and table.concat(snapshot.policyCards, "、") or "-";
   local diplomacySample:string = (#snapshot.diplomacySamples > 0) and table.concat(snapshot.diplomacySamples, "、") or "-";
+  local diplomacyModifierSample:string = (#snapshot.diplomacyModifierSamples > 0) and table.concat(snapshot.diplomacyModifierSamples, "、") or "-";
   local victorySample:string = (#snapshot.victorySamples > 0) and table.concat(snapshot.victorySamples, "、") or "-";
+  local victoryDetailSample:string = (#snapshot.victoryDetailSamples > 0) and table.concat(snapshot.victoryDetailSamples, "、") or "-";
   local firstCity:table = (#snapshot.cities > 0) and snapshot.cities[1] or nil;
   local cityDetail:string = "-";
   local workedPlotSample:string = "-";
+  local plotDetailSample:string = "-";
 
   if firstCity ~= nil then
     workedPlotSample = (#firstCity.workedPlotSamples > 0) and table.concat(firstCity.workedPlotSamples, "；") or "-";
+    plotDetailSample = (#firstCity.plotDetailSamples > 0) and table.concat(firstCity.plotDetailSamples, "；") or "-";
     cityDetail = firstCity.name ..
       " 人口" .. tostring(firstCity.population) ..
       " 食物" .. AuditValue(firstCity.foodSurplus, "?") ..
@@ -750,9 +826,11 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
     table.insert(lines, "单位：" .. AuditStatus(snapshot.unitCount, true) .. " " .. AuditValue(snapshot.unitCount, "?") .. " 个：" .. unitSample .. "；外交已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
     table.insert(lines, "政体/政策：" .. AuditValue(snapshot.governmentName, "?") .. "；槽位 " .. AuditValue(snapshot.policySlotCount, "?") .. "；已挂 " .. tostring(#snapshot.policyCards) .. "：" .. policySample .. "。");
     table.insert(lines, "公民/地块：首城工作地块 " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "；样例 " .. workedPlotSample .. "。");
+    table.insert(lines, "地块归因：" .. plotDetailSample .. "。");
     table.insert(lines, "外交细节：主要 " .. AuditValue(snapshot.majorContacts, "?") .. "，城邦 " .. AuditValue(snapshot.minorContacts, "?") .. "，战争 " .. AuditValue(snapshot.atWarCount, "?") .. "；" .. diplomacySample .. "。");
+    table.insert(lines, "外交修正：" .. diplomacyModifierSample .. "。");
     table.insert(lines, "胜利进度：启用 " .. AuditValue(snapshot.enabledVictoryCount, "?") .. " 类；" .. victorySample .. "。");
-    table.insert(lines, "已知缺口：地块坐标/改良/资源归因、外交修正项明细、胜利进度说明文字还没有进入本面板。");
+    table.insert(lines, "胜利说明：" .. victoryDetailSample .. "。");
     return table.concat(lines, "[NEWLINE]");
   end
 
@@ -763,9 +841,11 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   table.insert(lines, "Units: " .. AuditStatus(snapshot.unitCount, false) .. " " .. AuditValue(snapshot.unitCount, "?") .. ": " .. unitSample .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
   table.insert(lines, "Government/policies: " .. AuditValue(snapshot.governmentName, "?") .. "; slots " .. AuditValue(snapshot.policySlotCount, "?") .. "; active " .. tostring(#snapshot.policyCards) .. ": " .. policySample .. ".");
   table.insert(lines, "Citizens/plots: first city worked plots " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "; samples " .. workedPlotSample .. ".");
+  table.insert(lines, "Plot attribution: " .. plotDetailSample .. ".");
   table.insert(lines, "Diplomacy detail: majors " .. AuditValue(snapshot.majorContacts, "?") .. ", minors " .. AuditValue(snapshot.minorContacts, "?") .. ", wars " .. AuditValue(snapshot.atWarCount, "?") .. "; " .. diplomacySample .. ".");
+  table.insert(lines, "Diplomacy modifiers: " .. diplomacyModifierSample .. ".");
   table.insert(lines, "Victory progress: enabled " .. AuditValue(snapshot.enabledVictoryCount, "?") .. "; " .. victorySample .. ".");
-  table.insert(lines, "Known gaps: plot coordinates/improvements/resource attribution, diplomatic modifier details, and victory explanation text are not in this panel yet.");
+  table.insert(lines, "Victory text: " .. victoryDetailSample .. ".");
   return table.concat(lines, "[NEWLINE]");
 end
 
