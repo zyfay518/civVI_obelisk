@@ -85,6 +85,16 @@ local function SafeCall(fallback, callback)
   return fallback;
 end
 
+local function SafeComponent(owner:table, getterName:string)
+  if owner == nil then
+    return nil;
+  end
+
+  return SafeCall(nil, function()
+    return owner[getterName](owner);
+  end);
+end
+
 local function AuditStatus(value, isChinese:boolean)
   if value == nil then
     return isChinese and "缺口" or "gap";
@@ -373,8 +383,9 @@ local function CollectSnapshot()
     return snapshot;
   end
 
-  if player:GetTechs() ~= nil then
-    local techs:table = player:GetTechs();
+  local techs:table = SafeComponent(player, "GetTechs");
+
+  if techs ~= nil then
     snapshot.science = Round(techs:GetScienceYield());
 
     local techID:number = techs:GetResearchingTech();
@@ -395,8 +406,9 @@ local function CollectSnapshot()
     snapshot.techCompletedCount = completedTechs;
   end
 
-  if player:GetCulture() ~= nil then
-    local culture:table = player:GetCulture();
+  local culture:table = SafeComponent(player, "GetCulture");
+
+  if culture ~= nil then
     snapshot.culture = Round(culture:GetCultureYield());
 
     local civicID:number = culture:GetProgressingCivic();
@@ -443,14 +455,16 @@ local function CollectSnapshot()
     end
   end
 
-  if player:GetTreasury() ~= nil then
-    local treasury:table = player:GetTreasury();
-    snapshot.goldBalance = math.floor(treasury:GetGoldBalance());
-    snapshot.goldPerTurn = Round(treasury:GetGoldYield() - treasury:GetTotalMaintenance());
+  local treasury:table = SafeComponent(player, "GetTreasury");
+
+  if treasury ~= nil then
+    snapshot.goldBalance = SafeCall(nil, function() return math.floor(treasury:GetGoldBalance()); end);
+    snapshot.goldPerTurn = SafeCall(nil, function() return Round(treasury:GetGoldYield() - treasury:GetTotalMaintenance()); end);
   end
 
-  if player:GetReligion() ~= nil then
-    local religion:table = player:GetReligion();
+  local religion:table = SafeComponent(player, "GetReligion");
+
+  if religion ~= nil then
     snapshot.faithBalance = SafeCall(nil, function() return Round(religion:GetFaithBalance()); end);
     snapshot.faithPerTurn = SafeCall(nil, function() return Round(religion:GetFaithYield()); end);
     local religionType:number = SafeCall(-1, function() return religion:GetReligionTypeCreated(); end);
@@ -458,26 +472,31 @@ local function CollectSnapshot()
     snapshot.religionSummary = "宗教" .. tostring(religionType) .. " 万神殿" .. tostring(pantheon);
   end
 
-  if player:GetStats() ~= nil then
-    local stats:table = player:GetStats();
+  local stats:table = SafeComponent(player, "GetStats");
+
+  if stats ~= nil then
     snapshot.tourism = SafeCall(nil, function() return Round(stats:GetTourism()); end);
     snapshot.militaryStrength = SafeCall(nil, function() return Round(stats:GetMilitaryStrength()); end);
   end
 
   snapshot.score = SafeCall(nil, function() return Round(player:GetScore()); end);
   snapshot.eraName = LookupIndexedName(GameInfo.Eras, SafeCall(-1, function() return player:GetEra(); end), nil);
-  snapshot.governorSummary = SafeCall("?", function()
-    local governors:table = player:GetGovernors();
-    return "接口可用 " .. tostring(governors ~= nil);
-  end);
+  local governors:table = SafeComponent(player, "GetGovernors");
+  snapshot.governorSummary = governors ~= nil and "接口可用 true" or "?";
+
+  local espionageDiplomacy:table = SafeComponent(player, "GetDiplomacy");
   snapshot.espionageSummary = SafeCall("?", function()
-    local diplomacy:table = player:GetDiplomacy();
-    local escapingSpyID:number = diplomacy:GetNextEscapingSpyID();
+    if espionageDiplomacy == nil then
+      return "?";
+    end
+
+    local escapingSpyID:number = espionageDiplomacy:GetNextEscapingSpyID();
     return "逃脱间谍ID " .. tostring(escapingSpyID);
   end);
 
-  if player:GetResources() ~= nil then
-    local resources:table = player:GetResources();
+  local resources:table = SafeComponent(player, "GetResources");
+
+  if resources ~= nil then
     local resourceCount:number = 0;
 
     for resource in GameInfo.Resources() do
@@ -497,8 +516,9 @@ local function CollectSnapshot()
     snapshot.resourceCount = resourceCount;
   end
 
-  if player:GetUnits() ~= nil then
-    local units:table = player:GetUnits();
+  local units:table = SafeComponent(player, "GetUnits");
+
+  if units ~= nil then
     local unitCount:number = 0;
 
     for _, unit in units:Members() do
@@ -530,8 +550,9 @@ local function CollectSnapshot()
     snapshot.unitCount = unitCount;
   end
 
-  if player:GetGreatPeoplePoints() ~= nil then
-    local greatPeoplePoints:table = player:GetGreatPeoplePoints();
+  local greatPeoplePoints:table = SafeComponent(player, "GetGreatPeoplePoints");
+
+  if greatPeoplePoints ~= nil and GameInfo.GreatPersonClasses ~= nil then
 
     for class in GameInfo.GreatPersonClasses() do
       local points:number = SafeCall(0, function() return greatPeoplePoints:GetPointsTotal(class.Index); end);
@@ -543,8 +564,9 @@ local function CollectSnapshot()
     end
   end
 
-  if player:GetDiplomacy() ~= nil then
-    local diplomacy:table = player:GetDiplomacy();
+  local diplomacy:table = SafeComponent(player, "GetDiplomacy");
+
+  if diplomacy ~= nil then
     local metCount:number = 0;
 
     for playerID:number = 0, 63 do
@@ -564,8 +586,9 @@ local function CollectSnapshot()
   snapshot.minorContacts = 0;
   snapshot.atWarCount = 0;
 
-  if player:GetDiplomacy() ~= nil then
-    local localDiplomacy:table = player:GetDiplomacy();
+  local localDiplomacy:table = SafeComponent(player, "GetDiplomacy");
+
+  if localDiplomacy ~= nil then
     local localPlayerID:number = Game.GetLocalPlayer();
 
     for playerID:number = 0, 63 do
@@ -679,15 +702,16 @@ local function CollectSnapshot()
     end
   end
 
-  if player:GetCities() ~= nil then
-    local cities:table = player:GetCities();
-    snapshot.cityCount = cities:GetCount();
+  local cities:table = SafeComponent(player, "GetCities");
+
+  if cities ~= nil then
+    snapshot.cityCount = SafeCall(0, function() return cities:GetCount(); end);
     local cityIndex:number = 0;
 
     for _, city in cities:Members() do
       cityIndex = cityIndex + 1;
       local citySnapshot:table = {
-        name = Locale.Lookup(city:GetName()),
+        name = SafeCall("-", function() return Locale.Lookup(city:GetName()); end),
         population = 0,
         production = "-",
         productionTurns = -1,
@@ -708,15 +732,18 @@ local function CollectSnapshot()
       };
 
       citySnapshot.population = SafeCall(0, function() return city:GetPopulation(); end);
-      citySnapshot.loyalty = SafeCall(nil, function() return city:GetLoyalty():GetLoyalty(); end);
+
+      local cityLoyalty:table = SafeComponent(city, "GetLoyalty");
+      citySnapshot.loyalty = cityLoyalty ~= nil and SafeCall(nil, function() return cityLoyalty:GetLoyalty(); end) or nil;
       citySnapshot.yields.food = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.FOOD)); end);
       citySnapshot.yields.production = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.PRODUCTION)); end);
       citySnapshot.yields.science = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.SCIENCE)); end);
       citySnapshot.yields.culture = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.CULTURE)); end);
       citySnapshot.yields.gold = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.GOLD)); end);
 
-      if city:GetGrowth() ~= nil then
-        local growth:table = city:GetGrowth();
+      local growth:table = SafeComponent(city, "GetGrowth");
+
+      if growth ~= nil then
         citySnapshot.food = SafeCall(nil, function() return Round(growth:GetFood()); end);
         citySnapshot.foodSurplus = SafeCall(nil, function() return Round(growth:GetFoodSurplus()); end);
         citySnapshot.housing = SafeCall(nil, function() return Round(growth:GetHousing()); end);
@@ -762,7 +789,7 @@ local function CollectSnapshot()
         citySnapshot.workedPlotCount = workedPlotCount;
       end
 
-      local cityBuildings:table = SafeCall(nil, function() return city:GetBuildings(); end);
+      local cityBuildings:table = SafeComponent(city, "GetBuildings");
 
       if cityBuildings ~= nil and cityPlots ~= nil then
         for _, plotID in pairs(cityPlots) do
@@ -778,27 +805,40 @@ local function CollectSnapshot()
         end
       end
 
-      local cityDistricts:table = SafeCall(nil, function() return city:GetDistricts(); end);
+      local cityDistricts:table = SafeComponent(city, "GetDistricts");
 
       if cityDistricts ~= nil then
-        for _, district in cityDistricts:Members() do
+        local districtMembers:table = SafeCall({}, function()
+          local members:table = {};
+
+          for _, district in cityDistricts:Members() do
+            table.insert(members, district);
+          end
+
+          return members;
+        end);
+
+        for _, district in ipairs(districtMembers) do
           citySnapshot.districtCount = citySnapshot.districtCount + 1;
         end
       end
 
-      local cityTrade:table = SafeCall(nil, function() return city:GetTrade(); end);
+      local cityTrade:table = SafeComponent(city, "GetTrade");
 
       if cityTrade ~= nil then
         local routes:table = SafeCall({}, function() return cityTrade:GetOutgoingRoutes(); end);
         citySnapshot.tradeRouteCount = #routes;
       end
 
-      if city:GetBuildQueue() ~= nil then
-        local buildQueue:table = city:GetBuildQueue();
-        citySnapshot.productionTurns = buildQueue:GetTurnsLeft();
+      local buildQueue:table = SafeComponent(city, "GetBuildQueue");
 
-        if buildQueue:GetCurrentProductionTypeHash() ~= nil then
-          citySnapshot.production = LookupProductionName(buildQueue:GetCurrentProductionTypeHash());
+      if buildQueue ~= nil then
+        citySnapshot.productionTurns = SafeCall(-1, function() return buildQueue:GetTurnsLeft(); end);
+
+        local productionHash:number = SafeCall(nil, function() return buildQueue:GetCurrentProductionTypeHash(); end);
+
+        if productionHash ~= nil then
+          citySnapshot.production = LookupProductionName(productionHash);
         end
       end
 
