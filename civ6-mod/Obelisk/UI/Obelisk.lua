@@ -10,10 +10,10 @@ local collapseElapsed:number = 0;
 local currentMode:string = "data";
 local journal:table = {};
 local journalSequence:number = 0;
-local persistedEntryCount:number = 0;
 local persistenceLoadStatus:string = "not_checked";
 local persistenceSaveStatus:string = "not_checked";
 local persistenceLoadAttempted:boolean = false;
+local currentSnapshot:table = nil;
 
 local function LookupOrDefault(tag:string, fallback:string, ...)
   local value:string = Locale.Lookup(tag, ...);
@@ -84,6 +84,16 @@ local function SafeCall(fallback, callback)
   end
 
   return fallback;
+end
+
+local function SafeComponent(owner:table, getterName:string)
+  if owner == nil then
+    return nil;
+  end
+
+  return SafeCall(nil, function()
+    return owner[getterName](owner);
+  end);
 end
 
 local function AuditStatus(value, isChinese:boolean)
@@ -177,6 +187,8 @@ local function StatusText(value, isChinese:boolean)
     return "load_failed（读取失败）";
   elseif status == "not_checked" then
     return "not_checked（未检查）";
+  elseif status == "session_only" then
+    return "session_only（仅当前会话）";
   end
 
   return status;
@@ -224,19 +236,6 @@ local function LookupProductionName(productionHash:number)
   return "-";
 end
 
-local function EncodeJournalProbe()
-  local lastEntry:table = #journal > 0 and journal[#journal] or nil;
-  local lastTurn:string = lastEntry ~= nil and tostring(lastEntry.turn or "-") or "-";
-  local lastReason:string = lastEntry ~= nil and tostring(lastEntry.reason or "-") or "-";
-
-  return "v1|" ..
-    tostring(Game.GetCurrentGameTurn()) .. "|" ..
-    tostring(journalSequence) .. "|" ..
-    tostring(#journal) .. "|" ..
-    lastTurn .. "|" ..
-    lastReason;
-end
-
 local function DecodeJournalProbe(payload:string)
   local parts:table = {};
 
@@ -252,30 +251,6 @@ local function DecodeJournalProbe(payload:string)
     lastTurn = parts[5] or "-",
     lastReason = parts[6] or "-"
   };
-end
-
-local function PersistJournal()
-  local player:table = GetLocalPlayerObject();
-
-  if player == nil or player.SetProperty == nil then
-    persistenceSaveStatus = "unavailable";
-    return false;
-  end
-
-  local payload:string = EncodeJournalProbe();
-
-  local success:boolean = pcall(function()
-    player:SetProperty(JOURNAL_PROPERTY_KEY, payload);
-  end);
-
-  if success then
-    persistedEntryCount = #journal;
-    persistenceSaveStatus = "saved";
-    return true;
-  end
-
-  persistenceSaveStatus = "save_failed";
-  return false;
 end
 
 local function LoadPersistedJournal()
@@ -313,7 +288,6 @@ local function LoadPersistedJournal()
     journalSequence = decoded.savedSequence;
   end
 
-  persistedEntryCount = decoded.entryCount;
   persistenceLoadStatus = "loaded";
 end
 
@@ -363,27 +337,29 @@ local function CollectSnapshot()
     return snapshot;
   end
 
-  if player:GetTechs() ~= nil then
-    local techs:table = player:GetTechs();
-    snapshot.science = Round(techs:GetScienceYield());
+  local techs:table = SafeComponent(player, "GetTechs");
 
-    local techID:number = techs:GetResearchingTech();
+  if techs ~= nil then
+    snapshot.science = SafeCall(0, function() return Round(techs:GetScienceYield()); end);
+
+    local techID:number = SafeCall(-1, function() return techs:GetResearchingTech(); end);
 
     if techID ~= -1 and GameInfo.Technologies[techID] ~= nil then
       snapshot.currentTech = Locale.Lookup(GameInfo.Technologies[techID].Name);
-      snapshot.currentTechTurns = techs:GetTurnsLeft();
+      snapshot.currentTechTurns = SafeCall(-1, function() return techs:GetTurnsLeft(); end);
     end
   end
 
-  if player:GetCulture() ~= nil then
-    local culture:table = player:GetCulture();
-    snapshot.culture = Round(culture:GetCultureYield());
+  local culture:table = SafeComponent(player, "GetCulture");
 
-    local civicID:number = culture:GetProgressingCivic();
+  if culture ~= nil then
+    snapshot.culture = SafeCall(0, function() return Round(culture:GetCultureYield()); end);
+
+    local civicID:number = SafeCall(-1, function() return culture:GetProgressingCivic(); end);
 
     if civicID ~= -1 and GameInfo.Civics[civicID] ~= nil then
       snapshot.currentCivic = Locale.Lookup(GameInfo.Civics[civicID].Name);
-      snapshot.currentCivicTurns = culture:GetTurnsLeft();
+      snapshot.currentCivicTurns = SafeCall(-1, function() return culture:GetTurnsLeft(); end);
     end
 
     local governmentID:number = SafeCall(-1, function() return culture:GetCurrentGovernment(); end);
@@ -413,28 +389,32 @@ local function CollectSnapshot()
     end
   end
 
-  if player:GetTreasury() ~= nil then
-    local treasury:table = player:GetTreasury();
-    snapshot.goldBalance = math.floor(treasury:GetGoldBalance());
-    snapshot.goldPerTurn = Round(treasury:GetGoldYield() - treasury:GetTotalMaintenance());
+  local treasury:table = SafeComponent(player, "GetTreasury");
+
+  if treasury ~= nil then
+    snapshot.goldBalance = SafeCall(0, function() return math.floor(treasury:GetGoldBalance()); end);
+    snapshot.goldPerTurn = SafeCall(0, function() return Round(treasury:GetGoldYield() - treasury:GetTotalMaintenance()); end);
   end
 
-  if player:GetReligion() ~= nil then
-    local religion:table = player:GetReligion();
+  local religion:table = SafeComponent(player, "GetReligion");
+
+  if religion ~= nil then
     snapshot.faithBalance = SafeCall(nil, function() return Round(religion:GetFaithBalance()); end);
     snapshot.faithPerTurn = SafeCall(nil, function() return Round(religion:GetFaithYield()); end);
   end
 
-  if player:GetStats() ~= nil then
-    local stats:table = player:GetStats();
+  local stats:table = SafeComponent(player, "GetStats");
+
+  if stats ~= nil then
     snapshot.tourism = SafeCall(nil, function() return Round(stats:GetTourism()); end);
     snapshot.militaryStrength = SafeCall(nil, function() return Round(stats:GetMilitaryStrength()); end);
   end
 
   snapshot.score = SafeCall(nil, function() return Round(player:GetScore()); end);
 
-  if player:GetResources() ~= nil then
-    local resources:table = player:GetResources();
+  local resources:table = SafeComponent(player, "GetResources");
+
+  if resources ~= nil then
     local resourceCount:number = 0;
 
     for resource in GameInfo.Resources() do
@@ -454,8 +434,9 @@ local function CollectSnapshot()
     snapshot.resourceCount = resourceCount;
   end
 
-  if player:GetUnits() ~= nil then
-    local units:table = player:GetUnits();
+  local units:table = SafeComponent(player, "GetUnits");
+
+  if units ~= nil then
     local unitCount:number = 0;
 
     for _, unit in units:Members() do
@@ -476,8 +457,9 @@ local function CollectSnapshot()
     snapshot.unitCount = unitCount;
   end
 
-  if player:GetDiplomacy() ~= nil then
-    local diplomacy:table = player:GetDiplomacy();
+  local diplomacy:table = SafeComponent(player, "GetDiplomacy");
+
+  if diplomacy ~= nil then
     local metCount:number = 0;
 
     for playerID:number = 0, 63 do
@@ -497,8 +479,9 @@ local function CollectSnapshot()
   snapshot.minorContacts = 0;
   snapshot.atWarCount = 0;
 
-  if player:GetDiplomacy() ~= nil then
-    local localDiplomacy:table = player:GetDiplomacy();
+  local localDiplomacy:table = SafeComponent(player, "GetDiplomacy");
+
+  if localDiplomacy ~= nil then
     local localPlayerID:number = Game.GetLocalPlayer();
 
     for playerID:number = 0, 63 do
@@ -612,15 +595,16 @@ local function CollectSnapshot()
     end
   end
 
-  if player:GetCities() ~= nil then
-    local cities:table = player:GetCities();
-    snapshot.cityCount = cities:GetCount();
+  local cities:table = SafeComponent(player, "GetCities");
+
+  if cities ~= nil then
+    snapshot.cityCount = SafeCall(0, function() return cities:GetCount(); end);
     local cityIndex:number = 0;
 
     for _, city in cities:Members() do
       cityIndex = cityIndex + 1;
       local citySnapshot:table = {
-        name = Locale.Lookup(city:GetName()),
+        name = SafeCall("-", function() return Locale.Lookup(city:GetName()); end),
         population = 0,
         production = "-",
         productionTurns = -1,
@@ -642,8 +626,9 @@ local function CollectSnapshot()
       citySnapshot.yields.culture = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.CULTURE)); end);
       citySnapshot.yields.gold = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.GOLD)); end);
 
-      if city:GetGrowth() ~= nil then
-        local growth:table = city:GetGrowth();
+      local growth:table = SafeComponent(city, "GetGrowth");
+
+      if growth ~= nil then
         citySnapshot.food = SafeCall(nil, function() return Round(growth:GetFood()); end);
         citySnapshot.foodSurplus = SafeCall(nil, function() return Round(growth:GetFoodSurplus()); end);
         citySnapshot.housing = SafeCall(nil, function() return Round(growth:GetHousing()); end);
@@ -689,12 +674,15 @@ local function CollectSnapshot()
         citySnapshot.workedPlotCount = workedPlotCount;
       end
 
-      if city:GetBuildQueue() ~= nil then
-        local buildQueue:table = city:GetBuildQueue();
-        citySnapshot.productionTurns = buildQueue:GetTurnsLeft();
+      local buildQueue:table = SafeComponent(city, "GetBuildQueue");
 
-        if buildQueue:GetCurrentProductionTypeHash() ~= nil then
-          citySnapshot.production = LookupProductionName(buildQueue:GetCurrentProductionTypeHash());
+      if buildQueue ~= nil then
+        citySnapshot.productionTurns = SafeCall(-1, function() return buildQueue:GetTurnsLeft(); end);
+
+        local productionHash:number = SafeCall(nil, function() return buildQueue:GetCurrentProductionTypeHash(); end);
+
+        if productionHash ~= nil then
+          citySnapshot.production = LookupProductionName(productionHash);
         end
       end
 
@@ -714,16 +702,28 @@ end
 
 local function RecordSnapshot(reason:string)
   local snapshot:table = CollectSnapshot();
+  currentSnapshot = snapshot;
   journalSequence = journalSequence + 1;
   snapshot.reason = reason or "manual";
   snapshot.sequence = journalSequence;
-  table.insert(journal, snapshot);
+  table.insert(journal, {
+    turn = snapshot.turn,
+    science = snapshot.science,
+    culture = snapshot.culture,
+    goldBalance = snapshot.goldBalance,
+    goldPerTurn = snapshot.goldPerTurn,
+    cityCount = snapshot.cityCount,
+    firstCityPopulation = snapshot.firstCityPopulation,
+    firstCityProduction = snapshot.firstCityProduction,
+    reason = snapshot.reason,
+    sequence = snapshot.sequence
+  });
 
   while #journal > MAX_JOURNAL_ENTRIES do
     table.remove(journal, 1);
   end
 
-  PersistJournal();
+  persistenceSaveStatus = "session_only";
   return snapshot;
 end
 
@@ -928,7 +928,7 @@ local function BuildMemoryAnswer(snapshot:table, isChinese:boolean)
 
   if isChinese then
     return "记忆状态：[NEWLINE]" ..
-      "会话快照：" .. tostring(#journal) .. "/" .. tostring(MAX_JOURNAL_ENTRIES) .. " 条；已写入：" .. tostring(persistedEntryCount) .. " 条。[NEWLINE]" ..
+      "会话摘要：" .. tostring(#journal) .. "/" .. tostring(MAX_JOURNAL_ENTRIES) .. " 条；完整数据只保留当前快照。[NEWLINE]" ..
       "读取状态：" .. StatusText(persistenceLoadStatus, true) .. "。[NEWLINE]" ..
       "写入状态：" .. StatusText(persistenceSaveStatus, true) .. "。[NEWLINE]" ..
       "最后记录：回合 " .. lastTurn .. "，来源 " .. lastReason .. "。[NEWLINE]" ..
@@ -936,7 +936,7 @@ local function BuildMemoryAnswer(snapshot:table, isChinese:boolean)
   end
 
   return "Memory status:[NEWLINE]" ..
-    "Session snapshots: " .. tostring(#journal) .. "/" .. tostring(MAX_JOURNAL_ENTRIES) .. "; persisted: " .. tostring(persistedEntryCount) .. ".[NEWLINE]" ..
+    "Session summaries: " .. tostring(#journal) .. "/" .. tostring(MAX_JOURNAL_ENTRIES) .. "; full data is current-snapshot only.[NEWLINE]" ..
     "Load status: " .. StatusText(persistenceLoadStatus, false) .. ".[NEWLINE]" ..
     "Save status: " .. StatusText(persistenceSaveStatus, false) .. ".[NEWLINE]" ..
     "Last record: turn " .. lastTurn .. ", reason " .. lastReason .. ".[NEWLINE]" ..
