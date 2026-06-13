@@ -13,6 +13,7 @@ local journalSequence:number = 0;
 local persistedEntryCount:number = 0;
 local persistenceLoadStatus:string = "not_checked";
 local persistenceSaveStatus:string = "not_checked";
+local persistenceLoadAttempted:boolean = false;
 
 local function LookupOrDefault(tag:string, fallback:string, ...)
   local value:string = Locale.Lookup(tag, ...);
@@ -288,6 +289,8 @@ local function PersistJournal()
 end
 
 local function LoadPersistedJournal()
+  persistenceLoadAttempted = true;
+
   local player:table = GetLocalPlayerObject();
 
   if player == nil or player.GetProperty == nil then
@@ -1077,6 +1080,10 @@ local function BuildCompareAnswer(snapshot:table, previous:table, isChinese:bool
 end
 
 local function BuildMemoryAnswer(snapshot:table, isChinese:boolean)
+  if not persistenceLoadAttempted then
+    LoadPersistedJournal();
+  end
+
   local lastEntry:table = nil;
 
   if #journal > 0 then
@@ -1214,8 +1221,6 @@ local function OnCollapse()
 end
 
 local function OnLocalPlayerTurnBegin()
-  RecordSnapshot("turn_begin");
-
   if isExpanded then
     RefreshAnswer(currentMode, "turn_begin_refresh");
   end
@@ -1299,8 +1304,6 @@ local function Initialize()
     Events.LocalPlayerTurnBegin.Add(OnLocalPlayerTurnBegin);
   end
 
-  LoadPersistedJournal();
-  RecordSnapshot("initialize");
   SetExpanded(false);
   print("Obelisk UI context loaded.");
 end
