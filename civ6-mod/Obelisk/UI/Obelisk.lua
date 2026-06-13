@@ -285,6 +285,9 @@ local function CollectSnapshot()
     unitCount = nil,
     unitSamples = {},
     metCivilizations = nil,
+    governmentName = nil,
+    policySlotCount = nil,
+    policyCards = {},
     currentTech = "-",
     currentTechTurns = -1,
     currentCivic = "-",
@@ -318,6 +321,32 @@ local function CollectSnapshot()
     if civicID ~= -1 and GameInfo.Civics[civicID] ~= nil then
       snapshot.currentCivic = Locale.Lookup(GameInfo.Civics[civicID].Name);
       snapshot.currentCivicTurns = culture:GetTurnsLeft();
+    end
+
+    local governmentID:number = SafeCall(-1, function() return culture:GetCurrentGovernment(); end);
+
+    if governmentID ~= -1 and GameInfo.Governments[governmentID] ~= nil then
+      snapshot.governmentName = Locale.Lookup(GameInfo.Governments[governmentID].Name);
+    end
+
+    local policySlotCount:number = SafeCall(nil, function() return culture:GetNumPolicySlots(); end);
+
+    if policySlotCount ~= nil then
+      snapshot.policySlotCount = policySlotCount;
+
+      for slotIndex:number = 0, policySlotCount - 1 do
+        local policyID:number = SafeCall(-1, function() return culture:GetSlotPolicy(slotIndex); end);
+        local slotTypeID:number = SafeCall(-1, function() return culture:GetSlotType(slotIndex); end);
+        local slotName:string = "-";
+
+        if slotTypeID ~= -1 and GameInfo.GovernmentSlots[slotTypeID] ~= nil then
+          slotName = Locale.Lookup(GameInfo.GovernmentSlots[slotTypeID].Name);
+        end
+
+        if policyID ~= -1 and GameInfo.Policies[policyID] ~= nil then
+          table.insert(snapshot.policyCards, slotName .. "：" .. Locale.Lookup(GameInfo.Policies[policyID].Name));
+        end
+      end
     end
   end
 
@@ -548,6 +577,7 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   local lines:table = {};
   local resourceSample:string = (#snapshot.resourceSamples > 0) and table.concat(snapshot.resourceSamples, "、") or "-";
   local unitSample:string = (#snapshot.unitSamples > 0) and table.concat(snapshot.unitSamples, "、") or "-";
+  local policySample:string = (#snapshot.policyCards > 0) and table.concat(snapshot.policyCards, "、") or "-";
   local firstCity:table = (#snapshot.cities > 0) and snapshot.cities[1] or nil;
   local cityDetail:string = "-";
 
@@ -566,7 +596,8 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
     table.insert(lines, "城市细节：" .. cityDetail .. "。");
     table.insert(lines, "全城列表：已读 " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "；资源 " .. AuditStatus(snapshot.resourceCount, true) .. " " .. AuditValue(snapshot.resourceCount, "?") .. " 类：" .. resourceSample .. "。");
     table.insert(lines, "单位：" .. AuditStatus(snapshot.unitCount, true) .. " " .. AuditValue(snapshot.unitCount, "?") .. " 个：" .. unitSample .. "；外交已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
-    table.insert(lines, "已知缺口：地块级可见收益、政策槽/政体、详细外交关系、胜利进度还没有进入本面板。");
+    table.insert(lines, "政体/政策：" .. AuditValue(snapshot.governmentName, "?") .. "；槽位 " .. AuditValue(snapshot.policySlotCount, "?") .. "；已挂 " .. tostring(#snapshot.policyCards) .. "：" .. policySample .. "。");
+    table.insert(lines, "已知缺口：地块级可见收益、详细外交关系、胜利进度还没有进入本面板。");
     return table.concat(lines, "[NEWLINE]");
   end
 
@@ -575,7 +606,8 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   table.insert(lines, "City detail: " .. cityDetail .. ".");
   table.insert(lines, "Cities: read " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "; resources " .. AuditStatus(snapshot.resourceCount, false) .. " " .. AuditValue(snapshot.resourceCount, "?") .. ": " .. resourceSample .. ".");
   table.insert(lines, "Units: " .. AuditStatus(snapshot.unitCount, false) .. " " .. AuditValue(snapshot.unitCount, "?") .. ": " .. unitSample .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
-  table.insert(lines, "Known gaps: visible plot yields, policies/government, detailed diplomacy, and victory progress are not in this panel yet.");
+  table.insert(lines, "Government/policies: " .. AuditValue(snapshot.governmentName, "?") .. "; slots " .. AuditValue(snapshot.policySlotCount, "?") .. "; active " .. tostring(#snapshot.policyCards) .. ": " .. policySample .. ".");
+  table.insert(lines, "Known gaps: visible plot yields, detailed diplomacy, and victory progress are not in this panel yet.");
   return table.concat(lines, "[NEWLINE]");
 end
 
