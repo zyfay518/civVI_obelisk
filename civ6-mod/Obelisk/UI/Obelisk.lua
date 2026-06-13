@@ -101,6 +101,24 @@ local function AuditValue(value, fallback:string)
   return tostring(value);
 end
 
+local function FormatYieldSet(food, production, gold, science, culture, faith, isChinese:boolean)
+  if isChinese then
+    return "食" .. tostring(food or 0) ..
+      " 产" .. tostring(production or 0) ..
+      " 金" .. tostring(gold or 0) ..
+      " 科" .. tostring(science or 0) ..
+      " 文" .. tostring(culture or 0) ..
+      " 信" .. tostring(faith or 0);
+  end
+
+  return "F" .. tostring(food or 0) ..
+    " P" .. tostring(production or 0) ..
+    " G" .. tostring(gold or 0) ..
+    " S" .. tostring(science or 0) ..
+    " C" .. tostring(culture or 0) ..
+    " Fa" .. tostring(faith or 0);
+end
+
 local function StatusText(value, isChinese:boolean)
   local status:string = SafeText(value, "unknown");
 
@@ -288,6 +306,12 @@ local function CollectSnapshot()
     governmentName = nil,
     policySlotCount = nil,
     policyCards = {},
+    majorContacts = nil,
+    minorContacts = nil,
+    atWarCount = nil,
+    diplomacySamples = {},
+    enabledVictoryCount = nil,
+    victorySamples = {},
     currentTech = "-",
     currentTechTurns = -1,
     currentCivic = "-",
@@ -430,6 +454,96 @@ local function CollectSnapshot()
     snapshot.metCivilizations = metCount;
   end
 
+  snapshot.majorContacts = 0;
+  snapshot.minorContacts = 0;
+  snapshot.atWarCount = 0;
+
+  if player:GetDiplomacy() ~= nil then
+    local localDiplomacy:table = player:GetDiplomacy();
+    local localPlayerID:number = Game.GetLocalPlayer();
+
+    for playerID:number = 0, 63 do
+      local otherPlayer:table = Players[playerID];
+
+      if playerID ~= localPlayerID and otherPlayer ~= nil then
+        local hasMet:boolean = SafeCall(false, function() return localDiplomacy:HasMet(playerID); end);
+
+        if hasMet then
+          local isMajor:boolean = SafeCall(false, function() return otherPlayer:IsMajor(); end);
+          local isMinor:boolean = SafeCall(false, function() return otherPlayer:IsMinor(); end);
+          local isAtWar:boolean = SafeCall(false, function() return localDiplomacy:IsAtWarWith(playerID); end);
+
+          if isMajor then
+            snapshot.majorContacts = snapshot.majorContacts + 1;
+          end
+
+          if isMinor then
+            snapshot.minorContacts = snapshot.minorContacts + 1;
+          end
+
+          if isAtWar then
+            snapshot.atWarCount = snapshot.atWarCount + 1;
+          end
+
+          if #snapshot.diplomacySamples < 4 then
+            local playerConfig:table = PlayerConfigurations[playerID];
+            local displayName:string = tostring(playerID);
+            local relationName:string = "-";
+            local diplomaticAI:table = SafeCall(nil, function() return otherPlayer:GetDiplomaticAI(); end);
+
+            if playerConfig ~= nil then
+              displayName = SafeCall(displayName, function()
+                local civilizationID:number = playerConfig:GetCivilizationTypeID();
+
+                if civilizationID ~= -1 and GameInfo.Civilizations[civilizationID] ~= nil then
+                  return Locale.Lookup(GameInfo.Civilizations[civilizationID].Name);
+                end
+
+                return Locale.Lookup(playerConfig:GetCivilizationTypeName());
+              end);
+            end
+
+            if diplomaticAI ~= nil then
+              local relationID:number = SafeCall(-1, function() return diplomaticAI:GetDiplomaticStateIndex(localPlayerID); end);
+
+              if relationID ~= -1 and GameInfo.DiplomaticStates[relationID] ~= nil then
+                relationName = Locale.Lookup(GameInfo.DiplomaticStates[relationID].Name);
+              end
+            end
+
+            if isAtWar then
+              relationName = relationName .. "/war";
+            end
+
+            table.insert(snapshot.diplomacySamples, displayName .. " " .. relationName);
+          end
+        end
+      end
+    end
+  end
+
+  snapshot.enabledVictoryCount = 0;
+
+  for victory in GameInfo.Victories() do
+    local victoryType:string = victory.VictoryType;
+    local isEnabled:boolean = SafeCall(false, function() return Game.IsVictoryEnabled(victoryType); end);
+
+    if isEnabled then
+      snapshot.enabledVictoryCount = snapshot.enabledVictoryCount + 1;
+
+      if #snapshot.victorySamples < 4 then
+        local teamID:number = SafeCall(-1, function() return player:GetTeam(); end);
+        local progress = nil;
+
+        if teamID ~= -1 then
+          progress = SafeCall(nil, function() return Game.GetVictoryProgressForTeam(victoryType, teamID); end);
+        end
+
+        table.insert(snapshot.victorySamples, Locale.Lookup(victory.Name) .. " " .. AuditValue(progress, "?"));
+      end
+    end
+  end
+
   if player:GetCities() ~= nil then
     local cities:table = player:GetCities();
     snapshot.cityCount = cities:GetCount();
@@ -447,6 +561,8 @@ local function CollectSnapshot()
         housing = nil,
         amenities = nil,
         amenitiesNeeded = nil,
+        workedPlotCount = nil,
+        workedPlotSamples = {},
         yields = {}
       };
 
@@ -464,6 +580,38 @@ local function CollectSnapshot()
         citySnapshot.housing = SafeCall(nil, function() return Round(growth:GetHousing()); end);
         citySnapshot.amenities = SafeCall(nil, function() return growth:GetAmenities(); end);
         citySnapshot.amenitiesNeeded = SafeCall(nil, function() return growth:GetAmenitiesNeeded(); end);
+      end
+
+      local cityPlots:table = SafeCall(nil, function() return Map.GetCityPlots():GetPurchasedPlots(city); end);
+
+      if cityPlots ~= nil then
+        local workedPlotCount:number = 0;
+
+        for _, plotID in pairs(cityPlots) do
+          local plot:table = SafeCall(nil, function() return Map.GetPlotByIndex(plotID); end);
+
+          if plot ~= nil then
+            local workerCount:number = SafeCall(0, function() return plot:GetWorkerCount(); end);
+
+            if workerCount > 0 then
+              workedPlotCount = workedPlotCount + workerCount;
+
+              if #citySnapshot.workedPlotSamples < 3 then
+                table.insert(citySnapshot.workedPlotSamples, FormatYieldSet(
+                  SafeCall(0, function() return plot:GetYield(YieldTypes.FOOD); end),
+                  SafeCall(0, function() return plot:GetYield(YieldTypes.PRODUCTION); end),
+                  SafeCall(0, function() return plot:GetYield(YieldTypes.GOLD); end),
+                  SafeCall(0, function() return plot:GetYield(YieldTypes.SCIENCE); end),
+                  SafeCall(0, function() return plot:GetYield(YieldTypes.CULTURE); end),
+                  SafeCall(0, function() return plot:GetYield(YieldTypes.FAITH); end),
+                  true
+                ));
+              end
+            end
+          end
+        end
+
+        citySnapshot.workedPlotCount = workedPlotCount;
       end
 
       if city:GetBuildQueue() ~= nil then
@@ -578,10 +726,14 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   local resourceSample:string = (#snapshot.resourceSamples > 0) and table.concat(snapshot.resourceSamples, "、") or "-";
   local unitSample:string = (#snapshot.unitSamples > 0) and table.concat(snapshot.unitSamples, "、") or "-";
   local policySample:string = (#snapshot.policyCards > 0) and table.concat(snapshot.policyCards, "、") or "-";
+  local diplomacySample:string = (#snapshot.diplomacySamples > 0) and table.concat(snapshot.diplomacySamples, "、") or "-";
+  local victorySample:string = (#snapshot.victorySamples > 0) and table.concat(snapshot.victorySamples, "、") or "-";
   local firstCity:table = (#snapshot.cities > 0) and snapshot.cities[1] or nil;
   local cityDetail:string = "-";
+  local workedPlotSample:string = "-";
 
   if firstCity ~= nil then
+    workedPlotSample = (#firstCity.workedPlotSamples > 0) and table.concat(firstCity.workedPlotSamples, "；") or "-";
     cityDetail = firstCity.name ..
       " 人口" .. tostring(firstCity.population) ..
       " 食物" .. AuditValue(firstCity.foodSurplus, "?") ..
@@ -597,7 +749,10 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
     table.insert(lines, "全城列表：已读 " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "；资源 " .. AuditStatus(snapshot.resourceCount, true) .. " " .. AuditValue(snapshot.resourceCount, "?") .. " 类：" .. resourceSample .. "。");
     table.insert(lines, "单位：" .. AuditStatus(snapshot.unitCount, true) .. " " .. AuditValue(snapshot.unitCount, "?") .. " 个：" .. unitSample .. "；外交已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
     table.insert(lines, "政体/政策：" .. AuditValue(snapshot.governmentName, "?") .. "；槽位 " .. AuditValue(snapshot.policySlotCount, "?") .. "；已挂 " .. tostring(#snapshot.policyCards) .. "：" .. policySample .. "。");
-    table.insert(lines, "已知缺口：地块级可见收益、详细外交关系、胜利进度还没有进入本面板。");
+    table.insert(lines, "公民/地块：首城工作地块 " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "；样例 " .. workedPlotSample .. "。");
+    table.insert(lines, "外交细节：主要 " .. AuditValue(snapshot.majorContacts, "?") .. "，城邦 " .. AuditValue(snapshot.minorContacts, "?") .. "，战争 " .. AuditValue(snapshot.atWarCount, "?") .. "；" .. diplomacySample .. "。");
+    table.insert(lines, "胜利进度：启用 " .. AuditValue(snapshot.enabledVictoryCount, "?") .. " 类；" .. victorySample .. "。");
+    table.insert(lines, "已知缺口：地块坐标/改良/资源归因、外交修正项明细、胜利进度说明文字还没有进入本面板。");
     return table.concat(lines, "[NEWLINE]");
   end
 
@@ -607,7 +762,10 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
   table.insert(lines, "Cities: read " .. tostring(#snapshot.cities) .. "/" .. tostring(snapshot.cityCount) .. "; resources " .. AuditStatus(snapshot.resourceCount, false) .. " " .. AuditValue(snapshot.resourceCount, "?") .. ": " .. resourceSample .. ".");
   table.insert(lines, "Units: " .. AuditStatus(snapshot.unitCount, false) .. " " .. AuditValue(snapshot.unitCount, "?") .. ": " .. unitSample .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
   table.insert(lines, "Government/policies: " .. AuditValue(snapshot.governmentName, "?") .. "; slots " .. AuditValue(snapshot.policySlotCount, "?") .. "; active " .. tostring(#snapshot.policyCards) .. ": " .. policySample .. ".");
-  table.insert(lines, "Known gaps: visible plot yields, detailed diplomacy, and victory progress are not in this panel yet.");
+  table.insert(lines, "Citizens/plots: first city worked plots " .. AuditValue(firstCity ~= nil and firstCity.workedPlotCount or nil, "?") .. "; samples " .. workedPlotSample .. ".");
+  table.insert(lines, "Diplomacy detail: majors " .. AuditValue(snapshot.majorContacts, "?") .. ", minors " .. AuditValue(snapshot.minorContacts, "?") .. ", wars " .. AuditValue(snapshot.atWarCount, "?") .. "; " .. diplomacySample .. ".");
+  table.insert(lines, "Victory progress: enabled " .. AuditValue(snapshot.enabledVictoryCount, "?") .. "; " .. victorySample .. ".");
+  table.insert(lines, "Known gaps: plot coordinates/improvements/resource attribution, diplomatic modifier details, and victory explanation text are not in this panel yet.");
   return table.concat(lines, "[NEWLINE]");
 end
 
