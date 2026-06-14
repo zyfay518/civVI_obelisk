@@ -112,12 +112,16 @@ source:
   author: example_author
   collected_at: 2026-06-14
   source_type: forum_post
+  license_note: 只保存摘要、观点结构和短引用；不保存大段原文或完整字幕。
 
 quality:
   confidence: medium
   consensus: common
   freshness: stable
   verified_by_owner: false
+  rule_check_status: passed
+  rule_check_notes:
+    - 与区域/城市数量基础机制不冲突。
 
 retrieval:
   tags:
@@ -131,6 +135,230 @@ retrieval:
     - 早期扩张
     - 奇观
 ```
+
+## 玩家攻略采集流程
+
+玩家攻略来源可以包括国内外论坛、Bilibili 视频、YouTube 视频、Reddit、贴吧、NGA、Steam Guide、Wiki 讨论页、个人复盘等。处理这些内容时，知识库保存的不是原始内容副本，而是经过抽取、校验和结构化后的策略条目。
+
+### 支持的来源形态
+
+#### 图文来源
+
+包括论坛帖、攻略文章、评论区长文、Steam Guide、Wiki 讨论页。
+
+处理方式：
+
+1. 抽取核心观点。
+2. 拆分成独立攻略条目。
+3. 标注来源 URL、作者、发布时间、采集时间。
+4. 保留必要短摘录用于核对，但不保存整篇原文。
+5. 将主观建议转换为结构化字段：适用条件、建议、依据、反例、可信度。
+
+#### 视频来源
+
+包括 Bilibili、YouTube、直播切片、攻略视频。
+
+处理方式：
+
+1. 获取字幕、简介、章节、评论高赞补充或人工笔记。
+2. 将音频/字幕整理为文字笔记。
+3. 按主题拆分：开局、科技线、城市规划、战争、胜利路线、文明专项。
+4. 每个主题形成一个或多个攻略条目。
+5. 记录视频 URL、UP 主/作者、发布时间、采集时间、时间戳范围。
+6. 不保存完整字幕或完整逐字稿，只保存结构化摘要、关键结论和必要短引用。
+
+视频条目的 `source` 推荐增加：
+
+```yaml
+source:
+  url: https://www.bilibili.com/video/example
+  author: example_up
+  source_type: bilibili_video
+  published_at: 2024-01-01
+  collected_at: 2026-06-14
+  timestamp_range: "08:32-12:10"
+  transcript_source: manual_notes
+  license_note: 只保存策略摘要和结构化结论，不保存完整字幕。
+```
+
+#### 多来源共识
+
+如果多个玩家在不同来源提出相同建议，不应重复保存大量近似条目。推荐做法：
+
+1. 保留一个主条目。
+2. 在 `source.references` 中挂多个来源。
+3. 提高 `quality.consensus`。
+4. 如果不同来源有条件差异，拆成多个适用范围不同的条目。
+
+示例：
+
+```yaml
+quality:
+  confidence: high
+  consensus: broad
+  freshness: stable
+source:
+  references:
+    - url: https://example.com/forum-a
+      source_type: forum_post
+    - url: https://www.bilibili.com/video/example
+      source_type: bilibili_video
+      timestamp_range: "08:32-12:10"
+```
+
+## 玩家攻略校验流程
+
+玩家攻略必须先和底层规则层做校验，再进入可用于回答的知识库。校验目标不是证明攻略绝对最优，而是确认它不违反游戏规则、不基于错误机制、不明显过期。
+
+### 校验等级
+
+#### `unchecked`
+
+刚采集，尚未验证。
+
+用途：
+
+- 只进入候选池。
+- 默认不用于正式回答，除非用户明确要求看未验证社区观点。
+
+#### `rule_checked`
+
+已和底层规则层校验，不违反已知游戏机制。
+
+用途：
+
+- 可以作为普通攻略建议使用。
+- 回答时仍应表述为“经验建议”。
+
+#### `cross_checked`
+
+被多个独立来源支持，或与实测/常识高度一致。
+
+用途：
+
+- 可作为较高可信攻略。
+- 可以在回答中更明确地推荐。
+
+#### `owner_verified`
+
+用户自己在实机或经验中确认有效。
+
+用途：
+
+- 项目内最高优先级的玩家经验。
+- 可作为该用户偏好的策略记忆。
+
+#### `rejected`
+
+与规则冲突、版本过期、适用条件严重缺失或明显误导。
+
+用途：
+
+- 不用于回答。
+- 可保留为反例或错误攻略记录。
+
+### 校验维度
+
+每条玩家攻略至少检查：
+
+1. **规则一致性**：是否违反游戏内基础规则、公式或 UI 数据。
+2. **版本适用性**：是否适用于当前资料片、规则集、补丁版本。
+3. **条件完整性**：是否说明时代、文明、胜利目标、地图、难度、战争状态等。
+4. **结论强度**：是硬规则、常见经验、特定打法还是个人偏好。
+5. **反例存在性**：是否有明显例外场景。
+6. **来源质量**：作者是否可信、是否有复盘证据、是否被多人验证。
+7. **与当前产品边界一致**：是否要求作弊、读取隐藏信息、自动操作或违反项目边界。
+
+### 校验结果字段
+
+```yaml
+quality:
+  confidence: medium
+  consensus: common
+  freshness: stable
+  verification_status: rule_checked
+  verified_by_owner: false
+  rule_check_status: passed
+  rule_check_notes:
+    - 与游戏规则层的住房、城市数量和区域槽位机制一致。
+    - 该建议是通用经验，不保证所有文明和地图都最优。
+  rejection_reason: null
+```
+
+### 规则冲突处理
+
+如果玩家攻略和规则层冲突：
+
+1. 优先相信规则层。
+2. 将攻略标记为 `rejected` 或 `needs_review`。
+3. 如果攻略可能是版本差异导致，标记 `version_sensitive`。
+4. 如果攻略是措辞过强但方向有价值，降级为更窄适用条件的 `heuristic`。
+
+示例：
+
+```yaml
+quality:
+  verification_status: needs_review
+  confidence: low
+  rule_check_status: conflict
+  rule_check_notes:
+    - 原攻略声称某政策影响所有城市，但规则层显示只影响特定产出来源。
+```
+
+## 攻略加工流水线
+
+推荐将采集到的玩家内容按以下流水线处理：
+
+1. **Raw Source**：保存来源元数据，不保存大段受版权保护内容。
+2. **Extraction Notes**：整理短笔记，列出核心观点、时间戳、上下文。
+3. **Claim Split**：把一个视频/帖子拆成多个独立 claim。
+4. **Rule Check**：对每个 claim 和规则层做一致性校验。
+5. **Applicability Tagging**：补齐时代、胜利类型、文明、难度、地图等适用条件。
+6. **Tip Entry Build**：生成结构化攻略条目。
+7. **Review Queue**：低可信、冲突、过期内容进入人工复核队列。
+8. **Published KB**：通过校验的条目进入可检索知识库。
+
+推荐目录：
+
+```text
+knowledge/
+  inbox/
+    raw_sources.yaml
+    extraction_notes/
+  review/
+    needs_rule_check.yaml
+    needs_owner_review.yaml
+    rejected.yaml
+  published/
+    rules/
+    explanations/
+    tips/
+```
+
+## 版权和引用边界
+
+知识库应避免成为论坛文章或视频字幕的全文复制库。
+
+允许保存：
+
+- 来源 URL、作者、标题、发布时间。
+- 自己整理的策略摘要。
+- 结构化观点。
+- 很短的必要摘录，用于核对来源。
+- 时间戳和章节位置。
+
+避免保存：
+
+- 完整文章复制。
+- 完整视频字幕。
+- 大段逐字稿。
+- 未获授权的付费内容全文。
+
+回答用户时：
+
+- 可以说“有社区攻略认为……”
+- 可以引用来源标题或作者。
+- 不应输出大段原文或完整字幕。
 
 ## 条目类型
 
