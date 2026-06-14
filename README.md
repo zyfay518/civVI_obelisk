@@ -37,9 +37,32 @@ python-consul/ Analysis service and model orchestration layer
 
 ## Current Status
 
-This repository is at the initial scaffold stage. The first milestone is a
-minimal end-to-end prototype:
+The active branch is `codex/civ6-ingame-ui`.
 
-1. Overlay UI mock accepts a player question.
-2. Python Consul returns a structured analysis response.
-3. Lua Beacon schema defines the observable game state payload.
+The project now has a working Civilization VI in-game Obelisk UI prototype.
+The old browser overlay remains useful as a mock, but current validation happens
+inside the real game.
+
+Implemented in the Civ VI mod prototype:
+
+- top-center Obelisk panel;
+- Chinese UI adaptation;
+- compact current data, rule advice, turn comparison, memory status, city
+  overview, and backend status modes;
+- explicit-interaction current snapshot collection;
+- compact in-session journal;
+- backend snapshot fields for player yields, tech/civics, economy, cities,
+  units, resources, government/policies, diplomacy, victory, great people,
+  trade route count/capacity, and first-city loyalty.
+
+Current phase:
+
+```text
+Phase 1: backend data completeness, with UI kept compact.
+```
+
+Before continuing development from a new machine or thread, read:
+
+```text
+docs/PROJECT_HANDOFF_2026-06-14.md
+```
