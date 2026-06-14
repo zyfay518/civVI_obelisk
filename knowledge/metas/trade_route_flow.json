@@ -1,0 +1,103 @@
+{
+  "id": "meta_trade_route_flow",
+  "name": "大商路流",
+  "type": "strategy_flow",
+  "core_goal": "通过商路容量、金币、道路、城邦和外交收益滚动经济优势。",
+  "applicable_civilizations": ["Portugal", "Mali", "Phoenicia", "England", "Any"],
+  "applicable_leaders": ["Any"],
+  "applicable_maps": ["Continents", "Archipelago", "Island Plates", "Any"],
+  "victory_targets": ["Culture", "Science", "Diplomacy", "General Economy"],
+  "key_prerequisites": [
+    {
+      "id": "has_trade_capacity",
+      "description": "已经拥有商路容量",
+      "state_key": "trade_route_capacity",
+      "operator": ">",
+      "value": 0,
+      "weight": 25,
+      "required": true,
+      "visible_in_game": "顶部商路容量"
+    }
+  ],
+  "timing_windows": [
+    {
+      "phase": "Ancient-Renaissance",
+      "turn_range_standard_speed": [35, 130],
+      "description": "商路越早跑满，越早滚动金币、道路和城市成长。"
+    }
+  ],
+  "state_match_conditions": [
+    {
+      "id": "unused_trade_capacity",
+      "description": "存在未使用商路容量，补商人收益明确",
+      "state_key": "trade_route_unused",
+      "operator": ">",
+      "value": 0,
+      "weight": 25,
+      "visible_in_game": "顶部商路容量 / 商人单位"
+    },
+    {
+      "id": "known_city_states",
+      "description": "已遇见城邦，可通过商路和使者获得外部收益",
+      "state_key": "minor_contacts",
+      "operator": ">=",
+      "value": 1,
+      "weight": 10,
+      "visible_in_game": "城邦面板"
+    },
+    {
+      "id": "gold_need_exists",
+      "description": "金币收入仍有提升空间",
+      "state_key": "gold_per_turn",
+      "operator": "<",
+      "value": 20,
+      "weight": 15,
+      "visible_in_game": "顶部金币收入"
+    }
+  ],
+  "bad_fit_conditions": [
+    {
+      "id": "no_trade_capacity",
+      "description": "没有商路容量时，无法启动大商路流。",
+      "state_key": "trade_route_capacity",
+      "operator": "<=",
+      "value": 0,
+      "severity": "blocking",
+      "visible_in_game": "顶部商路容量"
+    },
+    {
+      "id": "unsafe_routes",
+      "description": "战争或蛮族风险高时，商人容易被掠夺。",
+      "state_key": "barbarian_or_war_risk",
+      "operator": "==",
+      "value": true,
+      "severity": "warning",
+      "visible_in_game": "地图敌军 / 战争状态"
+    }
+  ],
+  "transition_conditions": [
+    {
+      "description": "如果商路已跑满且金币充足，应转向科技、文化、工业或胜利项目。",
+      "trigger": "trade_full AND gold_income_high"
+    }
+  ],
+  "common_failure_reasons": [
+    "有商路容量但长期不造商人。",
+    "只看金币，不根据城市短板选择内商或外商。",
+    "路线不安全导致商人被掠夺。"
+  ],
+  "recommended_game_data": [
+    "trade_route_active",
+    "trade_route_capacity",
+    "trade_route_unused",
+    "gold_per_turn",
+    "minor_contacts",
+    "cityStateSamples"
+  ],
+  "player_explanation_template": "大商路流主要看商路容量是否能跑满、路线是否安全、城邦/外国城市目标是否有价值，以及金币短板是否明显。",
+  "confidence": "medium",
+  "source": {
+    "type": "project_seed",
+    "status": "rule_checked"
+  }
+}

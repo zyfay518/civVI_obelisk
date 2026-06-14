@@ -1,0 +1,27 @@
+{
+  "turn": 92,
+  "era": "Medieval",
+  "city_count": 2,
+  "science": 15,
+  "culture": 12,
+  "gold_per_turn": 1,
+  "military_strength": 42,
+  "major_contacts": 1,
+  "minor_contacts": 0,
+  "at_war_count": 0,
+  "desired_victory": "General",
+  "current_tech": "Currency",
+  "resources": {
+    "horses": 0,
+    "iron": 1
+  },
+  "trade_route_active": 0,
+  "trade_route_capacity": 1,
+  "trade_route_unused": 1,
+  "average_city_production": 4,
+  "barbarian_or_war_risk": true,
+  "strategic_map": {
+    "expansion_candidates": 1,
+    "border_pressure": 3
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "id": "meta_campus_flow",
+  "name": "学院流",
+  "type": "strategy_flow",
+  "core_goal": "通过早期学院和科研积累建立科技领先或追赶能力。",
+  "applicable_civilizations": ["Korea", "Maya", "Australia", "Any"],
+  "applicable_leaders": ["Any"],
+  "applicable_maps": ["Any"],
+  "victory_targets": ["Science", "General Tempo"],
+  "key_prerequisites": [
+    {
+      "id": "science_pressure_exists",
+      "description": "当前科研存在追赶或扩大优势需求",
+      "state_key": "science",
+      "operator": "<",
+      "value": 35,
+      "weight": 20,
+      "required": false,
+      "visible_in_game": "顶部科研 / 对手科技对比"
+    },
+    {
+      "id": "enough_city_base",
+      "description": "已有足够城市承载学院投资",
+      "state_key": "city_count",
+      "operator": ">=",
+      "value": 2,
+      "weight": 20,
+      "required": true,
+      "visible_in_game": "城市数量 / 城市总览"
+    }
+  ],
+  "timing_windows": [
+    {
+      "phase": "Ancient-Medieval",
+      "turn_range_standard_speed": [25, 110],
+      "description": "学院流越早形成科研基础，越容易滚出科技优势。"
+    }
+  ],
+  "state_match_conditions": [
+    {
+      "id": "has_production_to_build",
+      "description": "城市有基础生产力支撑区域建设",
+      "state_key": "average_city_production",
+      "operator": ">=",
+      "value": 6,
+      "weight": 15,
+      "visible_in_game": "城市生产力 / 当前建造回合"
+    },
+    {
+      "id": "not_in_major_war",
+      "description": "没有被战争强迫转入军事生产",
+      "state_key": "at_war_count",
+      "operator": "==",
+      "value": 0,
+      "weight": 10,
+      "visible_in_game": "外交面板 / 战争状态"
+    },
+    {
+      "id": "science_victory_relevant",
+      "description": "科技或通用发展路线需要科研支撑",
+      "state_key": "desired_victory",
+      "operator": "in",
+      "value": ["Science", "General", "科技", "通用"],
+      "weight": 15,
+      "visible_in_game": "玩家目标 / 胜利路线判断"
+    }
+  ],
+  "bad_fit_conditions": [
+    {
+      "id": "single_city_too_early",
+      "description": "只有一座城时，通常先扩张比单城堆学院更稳。",
+      "state_key": "city_count",
+      "operator": "<=",
+      "value": 1,
+      "severity": "warning",
+      "visible_in_game": "城市数量"
+    }
+  ],
+  "transition_conditions": [
+    {
+      "description": "如果科研已领先但经济或生产短板明显，应转向商路、工业区或扩张补短板。",
+      "trigger": "science_high AND production_or_gold_low"
+    }
+  ],
+  "common_failure_reasons": [
+    "城市数量太少，学院无法形成规模。",
+    "只建学院不补生产和金币，导致科技有了但执行力不足。",
+    "战争压力下仍硬造学院，错过防守窗口。"
+  ],
+  "recommended_game_data": [
+    "science",
+    "current_tech",
+    "tech_candidate_samples",
+    "city_count",
+    "district_count",
+    "average_city_production"
+  ],
+  "player_explanation_template": "学院流主要看科研压力、城市数量、生产力和战争压力。它不是只造学院，而是用学院支撑后续科技窗口。",
+  "confidence": "medium",
+  "source": {
+    "type": "project_seed",
+    "status": "rule_checked"
+  }
+}

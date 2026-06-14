@@ -1,0 +1,27 @@
+{
+  "turn": 52,
+  "era": "Classical",
+  "city_count": 3,
+  "science": 21,
+  "culture": 14,
+  "gold_per_turn": 9,
+  "military_strength": 125,
+  "major_contacts": 2,
+  "minor_contacts": 1,
+  "at_war_count": 0,
+  "desired_victory": "Domination",
+  "current_tech": "Horseback Riding",
+  "resources": {
+    "horses": 2,
+    "iron": 0
+  },
+  "trade_route_active": 1,
+  "trade_route_capacity": 2,
+  "trade_route_unused": 1,
+  "average_city_production": 7,
+  "barbarian_or_war_risk": false,
+  "strategic_map": {
+    "expansion_candidates": 3,
+    "border_pressure": 1
+  }
+}

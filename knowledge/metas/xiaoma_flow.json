@@ -1,0 +1,113 @@
+{
+  "id": "meta_xiaoma_flow",
+  "name": "小马流",
+  "type": "strategy_flow",
+  "core_goal": "利用早期骑兵单位形成军事窗口，快速压制近邻或夺取关键城市。",
+  "applicable_civilizations": ["Scythia", "Mongolia", "Sumeria", "Any"],
+  "applicable_leaders": ["Any"],
+  "applicable_maps": ["Pangaea", "Continents", "Highlands", "Default"],
+  "victory_targets": ["Domination", "Tempo Advantage"],
+  "key_prerequisites": [
+    {
+      "id": "has_horses",
+      "description": "已发现或可稳定获取马资源",
+      "state_key": "resources.horses",
+      "operator": ">",
+      "value": 0,
+      "weight": 30,
+      "required": true,
+      "visible_in_game": "资源栏 / 地图马资源"
+    },
+    {
+      "id": "classical_or_earlier",
+      "description": "仍在小马流主要时间窗口内",
+      "state_key": "era",
+      "operator": "in",
+      "value": ["Ancient", "Classical", "远古", "古典"],
+      "weight": 20,
+      "required": true,
+      "visible_in_game": "右上角时代信息"
+    }
+  ],
+  "timing_windows": [
+    {
+      "phase": "Ancient-Classical",
+      "turn_range_standard_speed": [30, 80],
+      "description": "小马流主要窗口在远古后期到古典时代。"
+    }
+  ],
+  "state_match_conditions": [
+    {
+      "id": "nearby_major_target",
+      "description": "附近已有可评估的主要文明目标",
+      "state_key": "major_contacts",
+      "operator": ">=",
+      "value": 1,
+      "weight": 15,
+      "visible_in_game": "外交面板 / 已见文明"
+    },
+    {
+      "id": "gold_can_support_army",
+      "description": "金币收入能支撑维护和升级",
+      "state_key": "gold_per_turn",
+      "operator": ">=",
+      "value": 5,
+      "weight": 15,
+      "visible_in_game": "顶部金币收入"
+    },
+    {
+      "id": "military_not_too_weak",
+      "description": "军力不是明显短板",
+      "state_key": "military_strength",
+      "operator": ">=",
+      "value": 80,
+      "weight": 10,
+      "visible_in_game": "外交界面 / 军力对比"
+    }
+  ],
+  "bad_fit_conditions": [
+    {
+      "id": "no_horses",
+      "description": "没有马资源，核心单位无法稳定形成。",
+      "state_key": "resources.horses",
+      "operator": "<=",
+      "value": 0,
+      "severity": "blocking",
+      "visible_in_game": "资源栏 / 地图马资源"
+    },
+    {
+      "id": "too_late",
+      "description": "已错过早期骑兵窗口，强行小马流收益下降。",
+      "state_key": "era",
+      "operator": "in",
+      "value": ["Medieval", "Renaissance", "Industrial", "中世纪", "文艺复兴"],
+      "severity": "warning",
+      "visible_in_game": "右上角时代信息"
+    }
+  ],
+  "transition_conditions": [
+    {
+      "description": "如果骑兵窗口错过，应转向学院、商路或正常征服升级线。",
+      "trigger": "era_after_classical OR enemy_has_walls"
+    }
+  ],
+  "common_failure_reasons": [
+    "没有马资源仍强行走骑兵路线。",
+    "科技窗口太慢，对手已经有城墙或反骑兵单位。",
+    "经济不足，无法维护或升级军队。"
+  ],
+  "recommended_game_data": [
+    "resources.horses",
+    "current_tech",
+    "military_strength",
+    "gold_per_turn",
+    "major_contacts",
+    "strategic_map.expansion_candidates"
+  ],
+  "player_explanation_template": "小马流主要看马资源、早期科技窗口、附近目标、经济维护和对手防御。如果这些条件不足，小马流会变成高风险路线。",
+  "confidence": "medium",
+  "source": {
+    "type": "project_seed",
+    "status": "rule_checked"
+  }
+}

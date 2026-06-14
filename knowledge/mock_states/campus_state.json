@@ -1,0 +1,27 @@
+{
+  "turn": 68,
+  "era": "Classical",
+  "city_count": 4,
+  "science": 18,
+  "culture": 20,
+  "gold_per_turn": 12,
+  "military_strength": 76,
+  "major_contacts": 2,
+  "minor_contacts": 3,
+  "at_war_count": 0,
+  "desired_victory": "Science",
+  "current_tech": "Education",
+  "resources": {
+    "horses": 0,
+    "iron": 1
+  },
+  "trade_route_active": 2,
+  "trade_route_capacity": 2,
+  "trade_route_unused": 0,
+  "average_city_production": 8,
+  "barbarian_or_war_risk": false,
+  "strategic_map": {
+    "expansion_candidates": 2,
+    "border_pressure": 1
+  }
+}
