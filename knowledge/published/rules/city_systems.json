@@ -1,0 +1,67 @@
+[
+  {
+    "id": "rule_population_drives_city_capacity_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "人口决定城市基础承载能力",
+    "summary": "人口提供可工作市民、区域槽位基础和城市发展上限，是城市长期价值的核心指标之一。",
+    "body": "城市人口越高，可工作的地块和专家越多，并能支撑更多区域与建筑投资。人口成长受食物、住房、宜居度、忠诚度和局面安全共同影响。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["population", "citizens", "district_slots", "city_growth"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["cities", "population", "growth"], "keywords": ["人口", "市民", "城市成长", "区域槽位"]}
+  },
+  {
+    "id": "rule_food_surplus_controls_growth_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "食物盈余推动人口增长",
+    "summary": "城市食物盈余越高，人口增长越快；食物不足会停滞甚至拖慢城市发展。",
+    "body": "食物主要来自地块、建筑、商路、改良和部分政策/能力。早期食物不足会限制人口、区域槽位和地块利用效率。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["food", "growth", "population"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["food", "growth", "cities"], "keywords": ["食物", "余粮", "人口增长", "粮食"]}
+  },
+  {
+    "id": "rule_housing_caps_growth_rate_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "住房限制人口增长效率",
+    "summary": "住房不足会降低人口增长效率，因此城市发展需要持续补充住房来源。",
+    "body": "住房来自淡水、海水、建筑、区域、改良、政策和其他来源。城市接近或超过住房上限时，应优先评估粮仓、水渠、社区、改良或政策等解决方案。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["housing", "growth", "city_planning"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["housing", "growth"], "keywords": ["住房", "水渠", "粮仓", "成长"]}
+  },
+  {
+    "id": "rule_amenities_affect_city_output_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "宜居度影响城市效率",
+    "summary": "宜居度不足会降低城市满意度和产出表现，宜居度充足则能维持或提升城市效率。",
+    "body": "宜居度来源包括奢侈品、娱乐区域、建筑、政策、奇观、宗教或文明能力等。多城扩张后，奢侈品和娱乐体系不足会成为增长瓶颈。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["amenities", "luxuries", "city_yields"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["amenities", "luxury", "cities"], "keywords": ["宜居度", "奢侈品", "娱乐", "满意度"]}
+  },
+  {
+    "id": "rule_loyalty_controls_city_retention_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "忠诚度决定城市是否稳定归属",
+    "summary": "忠诚度压力过低会导致城市自由化或叛离，因此远距离扩张和征服城市需要管理忠诚来源。",
+    "body": "忠诚度受人口压力、时代、总督、政策、宗教、占领状态和周边城市影响。扩张或征服时应优先检查每回合忠诚变化。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["loyalty", "governors", "expansion", "conquest"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["loyalty", "expansion", "conquest"], "keywords": ["忠诚度", "自由城市", "总督", "叛城"]}
+  }
+]

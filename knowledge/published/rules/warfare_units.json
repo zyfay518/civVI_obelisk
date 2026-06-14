@@ -1,0 +1,41 @@
+[
+  {
+    "id": "rule_unit_tech_timing_creates_war_windows_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "单位科技代差创造战争窗口",
+    "summary": "关键军事科技会解锁更强单位，形成进攻或防守窗口。",
+    "body": "如果玩家单位落后一代，战争风险显著上升；如果玩家率先解锁关键单位，可利用窗口推进征服或防守反击。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["units", "technology", "war_timing"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["war", "units", "technology"], "keywords": ["军事科技", "单位代差", "战争窗口", "升级"]}
+  },
+  {
+    "id": "rule_siege_support_needed_against_walls_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "城墙需要攻城能力处理",
+    "summary": "面对有城墙和城市防御的目标，缺少攻城单位或破城手段会显著降低进攻效率。",
+    "body": "攻城塔、破城槌、攻城单位、海军、空军或高科技单位可改善破城效率。无准备进攻有墙城市会消耗大量单位和时间。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["siege", "walls", "city_combat"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["war", "siege", "city_combat"], "keywords": ["城墙", "攻城", "破城槌", "攻城塔", "弩炮"]}
+  },
+  {
+    "id": "rule_unit_maintenance_requires_economy_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "军队需要经济维护",
+    "summary": "大量单位会带来维护费用，战争路线必须有金币、商路、掠夺或政策支持。",
+    "body": "军队规模过大但经济不足会拖慢科研、建筑和升级。战争前应评估金币收入、升级成本、维护费和掠夺收益。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["units", "maintenance", "gold", "war_economy"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["war", "gold", "maintenance"], "keywords": ["维护费", "金币", "军队", "升级", "掠夺"]}
+  }
+]

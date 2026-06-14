@@ -1,0 +1,54 @@
+[
+  {
+    "id": "rule_revealed_map_bounds_valid_strategy_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "策略判断只能基于已知地图信息",
+    "summary": "合法策略建议应基于玩家已揭示/可见信息，不应使用战争迷雾下的隐藏资源或敌方隐藏单位。",
+    "body": "Project Obelisk 的地图分析必须遵守可见性边界。可评价已揭示地块、已知城市、已知资源和本方领土，但不能假设隐藏信息。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["visibility", "fog_of_war", "map_analysis"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "project_boundary", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["visibility", "map", "project_boundary"], "keywords": ["战争迷雾", "可见性", "已揭示", "地图评分"]}
+  },
+  {
+    "id": "rule_settlement_quality_depends_on_multiple_factors_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "开城位置质量由多因素决定",
+    "summary": "开城位置需要综合淡水/海水、食物、生产、奢侈、战略资源、防守、忠诚、区域相邻和距离。",
+    "body": "单一高产地块不足以保证城市优秀。开城评估应考虑成长、防守、忠诚、区域空间、资源覆盖和与现有城市的联动。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["settlement", "fresh_water", "resources", "loyalty", "adjacency"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["settlement", "expansion", "map"], "keywords": ["开城", "铺城位置", "淡水", "资源", "忠诚"]}
+  },
+  {
+    "id": "rule_builders_convert_land_to_yields_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "工人改良把地块转化为稳定收益",
+    "summary": "工人通过农场、矿山、伐木场、牧场、种植园等改良提升地块收益并接入资源。",
+    "body": "未改良地块过多通常意味着城市产出潜力没有释放。工人使用应匹配城市短板、boost、资源接入和政策窗口。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["builders", "improvements", "resources", "yields"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["builders", "improvements"], "keywords": ["工人", "改良", "农场", "矿山", "资源"]}
+  },
+  {
+    "id": "rule_chops_convert_features_to_timing_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "砍伐把地貌转化为时间窗口",
+    "summary": "砍树、收获资源等操作能把地图资产转化为即时生产力或食物，用于关键窗口。",
+    "body": "砍伐适合配合移民、区域、奇观、项目或军事窗口，但会牺牲长期地块收益或地貌价值。是否砍伐取决于时机收益和长期代价。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["chops", "features", "production_timing"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["builders", "chops", "timing"], "keywords": ["砍树", "收获", "工人", "马格努斯", "爆锤"]}
+  }
+]

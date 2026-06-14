@@ -1,0 +1,41 @@
+[
+  {
+    "id": "rule_faith_is_a_parallel_currency_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "信仰是一种并行资源",
+    "summary": "信仰不仅用于宗教单位，也可通过信条、黄金时代、总督、建筑或胜利路线转化为其他能力。",
+    "body": "信仰经济强时，可以支撑宗教胜利、自然学家、摇滚乐队、伟人购买、建筑或单位购买等路线，具体取决于政策、信条和时代能力。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["faith", "religion", "purchasing"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["faith", "religion", "economy"], "keywords": ["信仰", "宗教", "自然学家", "摇滚乐队", "伟人"]}
+  },
+  {
+    "id": "rule_religious_pressure_spreads_beliefs_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "宗教压力和宗教单位传播信仰",
+    "summary": "宗教通过城市压力、传教士、使徒、审判官等方式传播，城市多数宗教决定其宗教归属。",
+    "body": "宗教胜利要求让其他文明多数城市信奉自己的宗教。防守宗教时，需要关注使徒战斗、审判官清除、圣地和宗教压力。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["religious_pressure", "missionaries", "apostles", "religious_victory"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["religion", "religious_victory"], "keywords": ["宗教压力", "传教士", "使徒", "审判官", "宗教胜利"]}
+  },
+  {
+    "id": "rule_pantheon_and_beliefs_shape_faith_strategy_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "万神殿和信条决定信仰路线价值",
+    "summary": "万神殿和宗教信条会改变地块、城市、建筑、战争、文化或信仰转化效率。",
+    "body": "选择万神殿和信条应匹配出生地形、文明能力和胜利目标。强信条不是通用答案，适用性取决于地块、城市和路线。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["pantheon", "beliefs", "faith_strategy"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["pantheon", "beliefs", "faith"], "keywords": ["万神殿", "信条", "宗教路线", "信仰经济"]}
+  }
+]

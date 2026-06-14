@@ -1,0 +1,41 @@
+[
+  {
+    "id": "rule_governments_define_policy_slots_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "政体决定政策槽和基础路线",
+    "summary": "不同政体提供不同政策槽结构和政体效果，直接影响军事、经济、外交和伟人路线。",
+    "body": "选择政体时应匹配当前战略：战争需要军事政策，扩张和经济需要经济政策，城邦和外交路线需要外交政策，伟人路线需要通配槽和相关政策。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["governments", "policy_slots", "strategy"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["governments", "policy_cards"], "keywords": ["政体", "政策槽", "军事政策", "经济政策"]}
+  },
+  {
+    "id": "rule_policy_cards_are_timing_multipliers_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "政策卡是阶段性倍率工具",
+    "summary": "政策卡通常在特定阶段或行动窗口提供强修正，应该按当前计划切换而不是长期固定。",
+    "body": "造移民、造工人、造军队、冲区域、拿城邦、刷伟人等行动都可能对应更优政策卡。政策卡价值取决于是否和当前回合计划匹配。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["policy_cards", "timing", "multipliers"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["policy_cards", "timing"], "keywords": ["政策卡", "切卡", "移民卡", "工人卡", "军事卡"]}
+  },
+  {
+    "id": "rule_governors_specialize_cities_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "总督强化城市专项能力",
+    "summary": "总督提供城市级强化、忠诚支持和特定路线能力，是扩张、科研、文化、金币、外交和防守的重要工具。",
+    "body": "总督任命应结合城市定位。平伽拉偏科研文化，马格努斯偏砍树/移民/内商，梁偏工人和城市建设，维克多偏防守，瑞娜偏经济，莫克夏偏信仰，阿玛尼偏城邦外交。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["governors", "loyalty", "city_specialization"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["governors", "city_specialization"], "keywords": ["总督", "平伽拉", "马格努斯", "梁", "阿玛尼"]}
+  }
+]

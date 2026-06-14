@@ -1,0 +1,41 @@
+[
+  {
+    "id": "rule_science_unlocks_technology_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "科技树解锁单位、建筑、区域、资源和项目",
+    "summary": "科研产出推动科技树进度，科技树决定军事、经济、资源开发和部分胜利项目的可用性。",
+    "body": "科技落后会导致单位代差、关键建筑和资源开发滞后；科技领先则能打开战争窗口、生产效率和胜利项目窗口。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["science", "technology", "units", "resources"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["science", "technology"], "keywords": ["科技", "科研", "单位代差", "资源"]}
+  },
+  {
+    "id": "rule_culture_unlocks_civics_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "文化推动市政、政体和政策",
+    "summary": "文化产出推动市政树进度，市政树解锁政体、政策卡、外交、总督、建筑、单位和胜利相关能力。",
+    "body": "文化不足会导致政策槽、政体和关键制度落后；文化领先能提供经济修正、军事政策、外交工具和文化胜利基础。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["culture", "civics", "governments", "policy_cards"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["culture", "civics", "policy_cards"], "keywords": ["文化", "市政", "政体", "政策卡"]}
+  },
+  {
+    "id": "rule_boost_planning_improves_efficiency_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "围绕 boost 规划能提高研究效率",
+    "summary": "尤里卡和鼓舞会降低对应科技/市政压力，合理触发能提高科研和文化效率。",
+    "body": "如果触发条件成本较低，先触发 boost 再完成研究通常更高效；如果目标紧急或条件偏离主线，直接研究仍可能合理。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["boosts", "eureka", "inspiration", "efficiency"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["boosts", "technology", "civics"], "keywords": ["尤里卡", "鼓舞", "硬研", "效率"]}
+  }
+]

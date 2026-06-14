@@ -1,0 +1,41 @@
+[
+  {
+    "id": "rule_era_score_sets_age_outcome_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "时代分决定黑暗/普通/黄金/英雄时代",
+    "summary": "时代分达到不同阈值会进入不同下个时代状态，影响忠诚、献身和时代能力。",
+    "body": "时代分不足可能进入黑暗时代，达到阈值可进入黄金或英雄时代。时代状态会影响忠诚压力、政策和节奏选择。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["era_score", "ages", "loyalty", "dedications"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["era_score", "ages"], "keywords": ["时代分", "黄金时代", "黑暗时代", "英雄时代", "献身"]}
+  },
+  {
+    "id": "rule_world_congress_changes_global_rules_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "世界议会会临时改变全球规则",
+    "summary": "世界议会决议、紧急事件和竞赛会改变资源、贸易、外交、胜利点和全局奖励。",
+    "body": "世界议会需要外交 favor 和投票判断。外交胜利路线尤其需要关注议案、胜利点和竞赛奖励。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["world_congress", "diplomatic_favor", "diplomatic_victory"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["world_congress", "diplomacy"], "keywords": ["世界议会", "外交 favor", "议案", "紧急事件", "竞赛"]}
+  },
+  {
+    "id": "rule_climate_and_power_affect_late_game_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "气候和电力影响后期城市与外交",
+    "summary": "Gathering Storm 中，电力、碳排放、气候变化、灾害和海平面会上升影响后期城市与外交。",
+    "body": "工业化后应关注电力来源、碳排放、洪水/干旱/风暴风险、防洪设施和外交后果。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["climate", "power", "disasters", "co2"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["climate", "power", "late_game"], "keywords": ["气候", "电力", "碳排放", "灾害", "海平面"]}
+  }
+]

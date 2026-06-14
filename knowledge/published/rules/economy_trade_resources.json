@@ -1,0 +1,54 @@
+[
+  {
+    "id": "rule_gold_supports_flexibility_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "金币提供购买、维护和升级弹性",
+    "summary": "金币可用于维护、购买、升级、交易和外交，因此是连接军事、经济和发展节奏的通用资源。",
+    "body": "金币不足会限制单位升级、建筑购买、军队维护和应急能力。金币充足时，玩家可以更灵活地补短板或抓战争窗口。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["gold", "maintenance", "purchasing", "upgrades"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["gold", "economy"], "keywords": ["金币", "购买", "维护", "升级", "经济"]}
+  },
+  {
+    "id": "rule_trade_routes_convert_capacity_to_yields_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "商路把容量转化为持续收益",
+    "summary": "商路容量只有在商人运行路线后才转化为收益，闲置容量是明确的机会损失。",
+    "body": "内商通常强化城市成长和生产，外商通常强化金币、外交、城邦和旅游相关收益。路线选择应匹配当前短板。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["trade_routes", "yields", "roads"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["trade", "economy"], "keywords": ["商路", "商人", "内商", "外商", "贸易容量"]}
+  },
+  {
+    "id": "rule_luxury_resources_support_amenities_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "奢侈资源支撑宜居度",
+    "summary": "奢侈资源是宜居度的重要来源，可以通过改良、交易和扩张改善多城满意度。",
+    "body": "扩张后如果宜居度不足，应检查奢侈品种类、重复奢侈品交易、娱乐体系和政策来源。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["luxury_resources", "amenities", "trade"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["luxury", "amenities", "trade"], "keywords": ["奢侈品", "宜居度", "交易", "满意度"]}
+  },
+  {
+    "id": "rule_strategic_resources_gate_units_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "战略资源限制关键单位生产和升级",
+    "summary": "马、铁、硝石、煤、石油、铝、铀等战略资源会限制对应时代关键单位和工业能力。",
+    "body": "缺少战略资源时，玩家可能无法生产或升级关键单位；拥有资源优势时可以打开军事或工业窗口。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["strategic_resources", "units", "upgrades"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["strategic_resources", "war", "industry"], "keywords": ["战略资源", "铁", "马", "硝石", "煤", "石油", "铝", "铀"]}
+  }
+]

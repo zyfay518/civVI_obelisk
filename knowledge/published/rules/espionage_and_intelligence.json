@@ -1,0 +1,28 @@
+[
+  {
+    "id": "rule_spies_create_information_and_disruption_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "间谍提供情报、防守和破坏能力",
+    "summary": "间谍可执行任务、保护城市、提升情报和干扰对手，是中后期策略工具。",
+    "body": "间谍可以用于情报、偷科技、破坏、招募游击队、反间谍等任务。任务价值取决于目标城市、外交风险、间谍等级和当前胜利路线。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["spies", "espionage", "intelligence", "disruption"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["espionage", "spies"], "keywords": ["间谍", "偷科技", "反间谍", "情报", "破坏"]}
+  },
+  {
+    "id": "rule_counterspy_defends_key_districts_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "反间谍保护关键城市和区域",
+    "summary": "在关键太空港、工业区、商业区、学院或总督城市部署反间谍，可以降低对手破坏风险。",
+    "body": "当玩家进入科技胜利、工业爆发、金币核心或高价值城市阶段时，反间谍任务可以保护关键资产。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["counterspy", "districts", "defense"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["espionage", "defense", "science_victory"], "keywords": ["反间谍", "太空港", "工业区", "商业区", "保护"]}
+  }
+]

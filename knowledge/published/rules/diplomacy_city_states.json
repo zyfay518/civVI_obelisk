@@ -1,0 +1,54 @@
+[
+  {
+    "id": "rule_diplomacy_state_changes_risk_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "外交关系影响战争与合作风险",
+    "summary": "与其他文明的关系、可见度、议程、贸易、战争状态和外交承诺会影响战争风险与合作收益。",
+    "body": "外交状态不是装饰信息。被谴责、边境冲突、军事弱势、宗教冲突和议程不合都会提高风险；友宣、同盟、贸易和共同敌人能降低风险或创造收益。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["diplomacy", "war_risk", "alliances", "grievances"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["diplomacy", "war_risk"], "keywords": ["外交", "宣友", "同盟", "谴责", "战争风险"]}
+  },
+  {
+    "id": "rule_diplomatic_visibility_unlocks_information_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "外交能见度影响可获得情报",
+    "summary": "外交能见度越高，玩家能看到的对手信息越多，并可能影响战斗修正。",
+    "body": "外交能见度可通过代表团、大使馆、贸易、同盟、间谍、印刷术等机制提高。信息优势有助于判断对手路线、军力和战争风险。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["diplomatic_visibility", "intelligence", "espionage"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["diplomacy", "visibility", "espionage"], "keywords": ["外交能见度", "情报", "间谍", "代表团", "大使馆"]}
+  },
+  {
+    "id": "rule_city_state_envoys_unlock_bonuses_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "城邦使者提供分档收益",
+    "summary": "向城邦派遣使者会按门槛提供对应类型收益，成为科研、文化、信仰、金币、生产或军事的重要外部来源。",
+    "body": "城邦类型决定奖励方向。使者数量达到关键门槛后收益提升，成为宗主后还可获得独特宗主能力。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["city_states", "envoys", "suzerain"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["city_states", "envoys"], "keywords": ["城邦", "使者", "宗主", "任务"]}
+  },
+  {
+    "id": "rule_city_state_quests_are_envoy_opportunities_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "城邦任务是低成本使者机会",
+    "summary": "完成城邦任务可以获得使者，经常是低成本争夺城邦收益和宗主权的途径。",
+    "body": "如果任务目标与当前路线一致，优先完成能提高收益；如果任务严重偏离主线，则不应为了使者破坏核心节奏。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["city_state_quests", "envoys", "opportunity_cost"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["city_states", "quests", "envoys"], "keywords": ["城邦任务", "使者", "宗主"]}
+  }
+]

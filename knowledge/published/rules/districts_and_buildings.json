@@ -1,0 +1,54 @@
+[
+  {
+    "id": "rule_districts_specialize_cities_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "区域决定城市专业化方向",
+    "summary": "区域是城市把人口和地块转化为科研、文化、金币、信仰、生产、军事等长期能力的核心系统。",
+    "body": "学院、剧院、商业中心、港口、圣地、工业区、军营等区域分别支撑不同胜利路线和经济结构。城市规划应结合胜利目标、相邻加成和地块条件。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["districts", "specialization", "city_planning"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["districts", "city_planning"], "keywords": ["区域", "学院", "剧院", "工业区", "商业中心"]}
+  },
+  {
+    "id": "rule_adjacency_rewards_planning_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "区域相邻加成奖励提前规划",
+    "summary": "许多区域会根据周围地形、资源、奇观、其他区域或特殊改良获得相邻加成。",
+    "body": "相邻加成会影响区域长期收益，并可被政策放大。区域落位前应评估山脉、河流、资源、其他区域、奇观和文明特色。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["adjacency", "districts", "policy_cards"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["adjacency", "districts", "planning"], "keywords": ["相邻", "区域规划", "山脉", "河流", "政策卡"]}
+  },
+  {
+    "id": "rule_buildings_scale_district_value_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "建筑放大区域长期价值",
+    "summary": "区域本身提供基础能力，建筑进一步提供产出、专家槽、伟人点和特殊效果。",
+    "body": "同一区域是否值得继续投资，取决于当前胜利路线、城市产能、建筑收益、伟人竞争和机会成本。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["buildings", "districts", "great_people_points"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["buildings", "districts", "investment"], "keywords": ["建筑", "图书馆", "大学", "市场", "神社", "伟人点"]}
+  },
+  {
+    "id": "rule_wonders_are_high_opportunity_cost_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "奇观通常有较高机会成本",
+    "summary": "奇观提供强力效果，但需要大量生产力和特定条件，过早或无目标造奇观会拖慢扩张和基础建设。",
+    "body": "奇观应服务明确路线，例如胜利目标、文明能力、地块条件或关键政策/伟人节奏。无目标造奇观通常会挤占移民、区域、工人和军力窗口。",
+    "game_scope": {"game": "Civilization VI", "ruleset": "Gathering Storm", "speed": "Any", "difficulty": ["Any"], "map_types": ["Any"]},
+    "mechanics": ["wonders", "production", "opportunity_cost"],
+    "source": {"source_type": "project_rule_baseline", "collected_at": "2026-06-14", "license_note": "项目内规则摘要，不含外部原文。"},
+    "quality": {"confidence": "high", "consensus": "broad", "freshness": "stable", "verification_status": "rule_checked", "rule_check_status": "passed"},
+    "retrieval": {"tags": ["wonders", "production", "anti_pattern"], "keywords": ["奇观", "锤子", "机会成本", "抢奇观"]}
+  }
+]
