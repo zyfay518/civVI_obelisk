@@ -21,6 +21,8 @@
 
 Project Obelisk 是一个 Civilization VI 游戏内认知助手，帮助玩家理解可见游戏状态，但不替玩家操作游戏。
 
+新增产品方向：建设一个可检索知识库，用来沉淀网上收集到的玩家 tips、机制解释、开局思路、文明/政策/科技路线经验。AI 回答玩家问题时应结合“当前可见游戏状态 + 知识库经验”，但知识库内容需要保留来源、版本/资料片适用性和可信度标记，避免把过期或错误攻略当作事实。
+
 边界：
 
 - 只读取玩家可见、合法的 Civ VI Lua API 数据。
@@ -32,12 +34,12 @@ Project Obelisk 是一个 Civilization VI 游戏内认知助手，帮助玩家�
 
 ## 当前阶段
 
-Phase 1：后台数据完整性，UI 保持紧凑。
+Phase 1：后台数据完整性已基本完成，UI 保持紧凑。
 
 当前重点：
 
-1. 补齐稳定、低风险的后台快照字段。
-2. 每次新增字段后先由用户在 Civ VI 实机验证不崩溃。
+1. 后台快照字段进入“按问题补缺”阶段，不再盲目追求全量接入。
+2. 下一阶段重点转向 Python Consul / AI 回答层 / 知识库检索。
 3. UI 只展示摘要和有用答案，不展示长原始数据 dump。
 
 ## 进度状态
@@ -52,6 +54,7 @@ Phase 1：后台数据完整性，UI 保持紧凑。
 - 历史只保留轻量摘要，不把完整嵌套快照写入 Civ VI player properties。
 - 多城市、政策、资源、宗教、伟人、贸易路线数量、忠诚度相关数据已进入稳定方向。
 - 后台状态已改为紧凑状态摘要。
+- 科技/市政候选、商路明细、城邦详情、胜利深层指标、总督、间谍、战略地图评分边界版已通过 Windows Civ VI 实机验证。
 - 每个城市的 `citySnapshot` 已包含后台忠诚度字段：
   - `loyalty`
   - `loyaltyMax`
@@ -60,11 +63,13 @@ Phase 1：后台数据完整性，UI 保持紧凑。
 
 本轮待验证：
 
-1. 总督后台字段：总督点数、已花费点数、可任命/可晋升状态、总督样本。
+1. 暂无。下一阶段重点转向知识库、Python Consul 和 AI 回答质量优化。
 
 待做：
 
-1. 后续接入 Python Consul 和 AI 回答质量优化。
+1. 设计玩家 tips 知识库：资料来源、结构、可信度、版本适用性、检索方式。
+2. 后续接入 Python Consul 和 AI 回答质量优化。
+3. 按实际提问暴露出的缺口继续补专项数据，而不是一次性接入所有 Civ VI API 数据。
 
 高风险暂缓：
 
@@ -86,6 +91,8 @@ Phase 1：后台数据完整性，UI 保持紧凑。
 - 接入总督后台-only 数据：总督点数、已花费点数、可任命/可晋升状态、总督样本。读取依据来自官方 UI 的 `player:GetGovernors()`、`GetGovernorList()`、`governor:GetAssignedCity()`、`governor:IsEstablished()`。
 - 接入间谍后台-only 数据：容量、数量、待命/任务中/被俘/返程中数量和样本。读取依据来自官方 UI 的 `unit:GetSpyOperation()`、`unit:GetSpyOperationEndTurn()`、`playerDiplomacy:GetSpyCapacity()`、`GetNumSpiesOffMap()`、`GetNthCapturedSpy()`。
 - 接入战略地图评分边界版：只扫描 `PlayersVisibility[localPlayerID]:IsRevealed/IsVisible` 允许的地块，统计已揭示、可见、本方地块、近城扩张候选、边境压力和综合评分；不读取隐藏资源或敌方隐藏单位。
+- 新增产品需求：建立玩家 tips 知识库，用于收集网上玩家经验、机制解释和策略建议；AI 回答时结合当前局面数据和知识库检索结果。知识库内容需要记录来源、版本/资料片适用性、可信度和更新时间。
+- 新增知识库结构设计文档 `docs/KNOWLEDGE_BASE_DESIGN.md`：定义规则层、机制解释层、玩家攻略层，以及攻略条目的适用条件、建议、反例、来源和可信度字段。
 
 ## Windows 本机安装状态
 
@@ -201,7 +208,7 @@ Windows Civ VI 战略地图评分边界版
 
 ## 下一步
 
-1. 用户在 Windows Civ VI 实机验证间谍后台字段。
-2. 验证通过后记录结果并提交本轮改动。
-3. 后续接入 Python Consul 和 AI 回答质量优化。
+1. 设计玩家 tips 知识库的数据结构和导入流程。
+2. 设计 AI 回答链路：当前快照数据 + 知识库检索 + 可解释建议。
+3. 后续按真实提问暴露的数据缺口继续补专项字段。
 4. 解决 GitHub push 连接超时问题。
