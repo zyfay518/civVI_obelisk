@@ -18,10 +18,10 @@ Current active branch:
 codex/civ6-ingame-ui
 ```
 
-Current latest commit at handoff:
+Current handoff state:
 
 ```text
-04c2c49 Add project handoff status
+Use the latest commit on codex/civ6-ingame-ui. This handoff document is part of that commit history.
 ```
 
 Recommended resume command on another computer:
