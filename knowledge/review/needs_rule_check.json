@@ -1,0 +1,31 @@
+[
+  {
+    "id": "review_template_001",
+    "type": "claim_template",
+    "status": "unchecked",
+    "title": "待校验攻略模板",
+    "raw_claim_summary": "把从论坛、视频或图文中抽取的一条独立观点写在这里。",
+    "source": {
+      "url": "",
+      "author": "",
+      "source_type": "forum_post_or_video",
+      "published_at": "",
+      "collected_at": "",
+      "timestamp_range": "",
+      "license_note": "不保存大段原文、完整字幕或完整逐字稿。"
+    },
+    "proposed_applicability": {
+      "phases": [],
+      "victory_types": [],
+      "civilizations": [],
+      "conditions": []
+    },
+    "rule_check": {
+      "status": "unchecked",
+      "related_rules": [],
+      "notes": [],
+      "decision": "needs_review"
+    },
+    "next_action": "补齐来源、适用条件，并和 published/rules 中的底层规则做一致性校验。"
+  }
+]

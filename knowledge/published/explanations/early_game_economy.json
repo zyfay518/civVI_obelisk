@@ -1,0 +1,91 @@
+[
+  {
+    "id": "explain_low_city_count_early_001",
+    "type": "explanation",
+    "layer": "explanations",
+    "title": "早期城市数偏少的含义",
+    "summary": "远古/古典时期城市数偏少，通常会限制中期区域、人口和总产出扩张。",
+    "body": "如果玩家处于远古或古典时期，城市数仍然只有 1-2 座，同时周边还有安全扩张空间，那么当前局面的主要问题通常不是单城效率，而是帝国规模上限偏低。",
+    "applicability": {
+      "phases": ["Ancient", "Classical"],
+      "victory_types": ["General", "Science", "Culture", "Domination", "Religion"],
+      "civilizations": ["Any"],
+      "conditions": [
+        "city_count <= 2",
+        "expansion_candidate_count > 0",
+        "at_war_count == 0"
+      ]
+    },
+    "explanation_template": "你现在的城市数偏少。早期城市数决定中期区域槽位、人口和生产队列数量；如果周围还有安全位置，优先补城市比继续优化单城更关键。",
+    "related_rules": ["rule_city_count_expands_capacity_001"],
+    "quality": {
+      "confidence": "medium",
+      "consensus": "common",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "rule_check_status": "passed"
+    },
+    "retrieval": {
+      "tags": ["early_game", "expansion", "city_count"],
+      "keywords": ["城市少", "铺城", "前期发展", "扩张"]
+    }
+  },
+  {
+    "id": "explain_unused_trade_capacity_001",
+    "type": "explanation",
+    "layer": "explanations",
+    "title": "商路容量闲置的含义",
+    "summary": "商路容量未用满通常意味着经济、道路、城邦或胜利路线收益没有被充分利用。",
+    "body": "如果玩家拥有空闲商路容量，通常应优先评估是否能用商人补金币、生产、食物、城邦收益、外交旅游修正或前线道路。",
+    "applicability": {
+      "phases": ["Ancient", "Classical", "Medieval", "Renaissance", "Industrial", "Modern", "Atomic", "Information"],
+      "victory_types": ["General", "Science", "Culture", "Domination"],
+      "civilizations": ["Any"],
+      "conditions": [
+        "trade_route_active < trade_route_capacity"
+      ]
+    },
+    "explanation_template": "你的商路容量没有用满。商路不只是金币来源，也会影响城市成长、道路连接、城邦收益和部分胜利路线节奏。",
+    "related_rules": ["rule_trade_routes_are_economic_levers_001"],
+    "quality": {
+      "confidence": "high",
+      "consensus": "broad",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "rule_check_status": "passed"
+    },
+    "retrieval": {
+      "tags": ["trade", "economy", "missed_opportunity"],
+      "keywords": ["商路闲置", "贸易路线", "金币不够", "道路"]
+    }
+  },
+  {
+    "id": "explain_unboosted_research_001",
+    "type": "explanation",
+    "layer": "explanations",
+    "title": "未触发 boost 的硬研风险",
+    "summary": "如果关键科技或市政未触发尤里卡/鼓舞，直接硬研可能拖慢整体节奏。",
+    "body": "硬研不是错误，但如果有低成本行动能触发 boost，应优先比较触发成本和剩余研究时间，避免浪费科研或文化产出。",
+    "applicability": {
+      "phases": ["Ancient", "Classical", "Medieval", "Renaissance", "Industrial"],
+      "victory_types": ["General", "Science", "Culture"],
+      "civilizations": ["Any"],
+      "conditions": [
+        "current_tech_boosted == false OR current_civic_boosted == false"
+      ]
+    },
+    "explanation_template": "当前研究路线可能存在未触发 boost 的硬研。先看能否用低成本行动触发尤里卡/鼓舞，再决定是否继续硬研。",
+    "related_rules": ["rule_boosts_reduce_research_cost_001"],
+    "quality": {
+      "confidence": "medium",
+      "consensus": "common",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "rule_check_status": "passed"
+    },
+    "retrieval": {
+      "tags": ["technology", "civics", "boosts", "efficiency"],
+      "keywords": ["硬研", "尤里卡", "鼓舞", "科技慢", "文化慢"]
+    }
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "source_template_bilibili_001",
+    "status": "template",
+    "title": "Bilibili 攻略视频采集模板",
+    "url": "",
+    "author": "",
+    "source_type": "bilibili_video",
+    "published_at": "",
+    "collected_at": "",
+    "segments": [
+      {
+        "timestamp_range": "",
+        "topic": "",
+        "short_notes": "",
+        "candidate_claim_ids": []
+      }
+    ],
+    "copyright_policy": "只保存策略摘要、来源链接、时间戳和短笔记；不保存完整字幕或完整逐字稿。"
+  },
+  {
+    "id": "source_template_forum_001",
+    "status": "template",
+    "title": "论坛/图文攻略采集模板",
+    "url": "",
+    "author": "",
+    "source_type": "forum_post",
+    "published_at": "",
+    "collected_at": "",
+    "short_notes": "",
+    "candidate_claim_ids": [],
+    "copyright_policy": "只保存观点摘要和必要短摘录；不保存整篇原文。"
+  }
+]

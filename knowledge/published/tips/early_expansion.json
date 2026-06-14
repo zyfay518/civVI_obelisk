@@ -1,0 +1,184 @@
+[
+  {
+    "id": "tip_prioritize_three_to_four_cities_001",
+    "type": "heuristic",
+    "layer": "tips",
+    "title": "早期优先形成 3-4 城基础盘",
+    "summary": "多数标准速度对局中，如果周边仍有安全扩张空间，远古/古典时期优先形成 3-4 城基础盘通常比过早投入高成本奇观更稳。",
+    "body": "早期城市数量决定中期区域槽位、人口增长、生产队列和资源覆盖。若当前只有 1-2 城且没有直接战争压力，继续补移民和护航通常能提高后续所有胜利路线的上限。",
+    "game_scope": {
+      "game": "Civilization VI",
+      "ruleset": "Gathering Storm",
+      "speed": "Standard",
+      "difficulty": ["Emperor", "Immortal", "Deity", "General"],
+      "map_types": ["Pangaea", "Continents", "Default"]
+    },
+    "applicability": {
+      "phases": ["Ancient", "Classical"],
+      "victory_types": ["General", "Science", "Culture", "Domination", "Religion"],
+      "civilizations": ["Any"],
+      "conditions": [
+        "city_count <= 2",
+        "expansion_candidate_count > 0",
+        "at_war_count == 0"
+      ]
+    },
+    "recommendation": {
+      "action": "prioritize_expansion",
+      "priority": "high",
+      "advice": "优先补移民、护航单位和基础设施，尽快形成 3-4 城基础盘。",
+      "avoid": "不要在扩张空间充足时把大量早期生产力压进非关键奇观。"
+    },
+    "evidence": {
+      "rationale": [
+        "城市数量会扩大区域槽位、生产队列和总产出上限。",
+        "早期高成本奇观会占用移民、工人、区域和防守单位的生产窗口。"
+      ],
+      "counter_examples": [
+        "如果周围没有安全扩张空间，应优先军事、防守或经济恢复。",
+        "如果文明能力或胜利路线强依赖特定奇观，且首都有足够生产力，可以例外。",
+        "如果忠诚压力极高，盲目远距离铺城可能导致城市反叛。"
+      ]
+    },
+    "source": {
+      "source_type": "project_curated_baseline",
+      "collected_at": "2026-06-14",
+      "license_note": "项目内整理的通用策略摘要，等待后续挂接具体论坛/视频来源。"
+    },
+    "quality": {
+      "confidence": "medium",
+      "consensus": "common",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "verified_by_owner": false,
+      "rule_check_status": "passed",
+      "rule_check_notes": [
+        "与城市数量扩大产能上限的规则层一致。",
+        "该建议是通用启发式，不是所有文明和地图的硬规则。"
+      ]
+    },
+    "retrieval": {
+      "tags": ["early_game", "expansion", "city_count", "settlers"],
+      "keywords": ["铺城", "移民", "早期扩张", "城市数量", "奇观"]
+    }
+  },
+  {
+    "id": "tip_use_trade_capacity_001",
+    "type": "anti_pattern",
+    "layer": "tips",
+    "title": "不要长期闲置商路容量",
+    "summary": "如果商路容量长期没有用满，通常应尽快补商人或调整商路目的地。",
+    "body": "商路能补金币、食物、生产、道路、城邦和外交相关收益。容量闲置代表一项稳定收益来源没有运行，尤其在早中期会放大经济差距。",
+    "game_scope": {
+      "game": "Civilization VI",
+      "ruleset": "Gathering Storm",
+      "speed": "Any",
+      "difficulty": ["Any"],
+      "map_types": ["Any"]
+    },
+    "applicability": {
+      "phases": ["Ancient", "Classical", "Medieval", "Renaissance", "Industrial"],
+      "victory_types": ["General", "Science", "Culture", "Domination"],
+      "civilizations": ["Any"],
+      "conditions": [
+        "trade_route_active < trade_route_capacity"
+      ]
+    },
+    "recommendation": {
+      "action": "fill_trade_route_capacity",
+      "priority": "medium",
+      "advice": "优先补商人，并根据当前需求选择内商补城建或外商补金币/城邦/外交收益。",
+      "avoid": "不要在经济紧张或道路需求明显时长期空着商路容量。"
+    },
+    "evidence": {
+      "rationale": [
+        "商路是持续收益来源。",
+        "道路连接能改善调兵和城市联动。",
+        "文化胜利中外商和开放边境等机制存在联动价值。"
+      ],
+      "counter_examples": [
+        "如果商人容易被掠夺，需先处理安全问题。",
+        "如果短期有更高优先级生死战，商人可以延后。"
+      ]
+    },
+    "source": {
+      "source_type": "project_curated_baseline",
+      "collected_at": "2026-06-14",
+      "license_note": "项目内整理的通用策略摘要，等待后续挂接具体论坛/视频来源。"
+    },
+    "quality": {
+      "confidence": "high",
+      "consensus": "broad",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "verified_by_owner": false,
+      "rule_check_status": "passed",
+      "rule_check_notes": [
+        "与商路基础收益规则一致。"
+      ]
+    },
+    "retrieval": {
+      "tags": ["trade", "economy", "anti_pattern"],
+      "keywords": ["商路", "商人", "贸易路线", "金币", "道路"]
+    }
+  },
+  {
+    "id": "tip_check_boost_before_hard_research_001",
+    "type": "heuristic",
+    "layer": "tips",
+    "title": "硬研前先检查能否触发尤里卡/鼓舞",
+    "summary": "关键科技或市政未触发 boost 时，应先判断触发成本是否低于继续硬研的机会成本。",
+    "body": "如果当前科技/市政还没有 boost，且触发条件可在短期内完成，优先触发通常能节省科研或文化压力。但如果触发成本太高或目标紧急，硬研仍然合理。",
+    "game_scope": {
+      "game": "Civilization VI",
+      "ruleset": "Gathering Storm",
+      "speed": "Any",
+      "difficulty": ["Any"],
+      "map_types": ["Any"]
+    },
+    "applicability": {
+      "phases": ["Ancient", "Classical", "Medieval", "Renaissance", "Industrial"],
+      "victory_types": ["General", "Science", "Culture"],
+      "civilizations": ["Any"],
+      "conditions": [
+        "tech_candidate_has_untriggered_boost == true OR civic_candidate_has_untriggered_boost == true"
+      ]
+    },
+    "recommendation": {
+      "action": "evaluate_boost_trigger",
+      "priority": "medium",
+      "advice": "先看当前科技/市政的 boost 是否能用低成本行动触发，再决定是否继续硬研。",
+      "avoid": "不要为了一个成本过高的 boost 打乱核心发展节奏。"
+    },
+    "evidence": {
+      "rationale": [
+        "boost 会降低对应研究压力。",
+        "触发低成本 boost 能提高长期研究效率。"
+      ],
+      "counter_examples": [
+        "如果关键科技关系到战争窗口或防守，硬研可能更优。",
+        "如果 boost 条件需要大量偏离当前路线，不应强行触发。"
+      ]
+    },
+    "source": {
+      "source_type": "project_curated_baseline",
+      "collected_at": "2026-06-14",
+      "license_note": "项目内整理的通用策略摘要，等待后续挂接具体论坛/视频来源。"
+    },
+    "quality": {
+      "confidence": "medium",
+      "consensus": "common",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "verified_by_owner": false,
+      "rule_check_status": "passed",
+      "rule_check_notes": [
+        "与尤里卡/鼓舞降低研究压力的规则层一致。"
+      ]
+    },
+    "retrieval": {
+      "tags": ["technology", "civics", "boosts", "research_efficiency"],
+      "keywords": ["尤里卡", "鼓舞", "硬研", "科技", "市政"]
+    }
+  }
+]

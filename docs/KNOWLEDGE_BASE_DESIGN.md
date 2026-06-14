@@ -525,6 +525,22 @@ knowledge/
 3. Python Consul 读取这些文件并做关键词 + 标签检索。
 4. 后续再升级到向量检索或 SQLite。
 
+当前已初始化 JSON 数据目录：
+
+```text
+knowledge/
+  README.md
+  inbox/raw_sources.json
+  review/needs_rule_check.json
+  published/rules/core_mechanics.json
+  published/explanations/early_game_economy.json
+  published/tips/early_expansion.json
+  sources/sources.json
+schemas/knowledge_entry.example.json
+```
+
+首批种子数据用于验证结构和检索流程，不代表最终攻略覆盖完整。后续从论坛、Bilibili/YouTube 视频和图文攻略采集到的内容，应先进入 `inbox/` 或 `review/`，完成规则校验后再移动到 `published/tips/`。
+
 优先收集的攻略主题：
 
 - 新手通用：铺城、住房、宜居、商路、尤里卡、区域。

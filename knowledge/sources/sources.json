@@ -1,0 +1,11 @@
+[
+  {
+    "id": "project_curated_baseline",
+    "title": "Project Obelisk curated baseline",
+    "source_type": "project_internal",
+    "url": null,
+    "author": "Project Obelisk",
+    "collected_at": "2026-06-14",
+    "notes": "首批种子条目，用于验证知识库结构和检索流程。后续可挂接论坛、视频和图文来源。"
+  }
+]

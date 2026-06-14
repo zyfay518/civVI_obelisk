@@ -1,0 +1,56 @@
+{
+  "id": "tip_example_001",
+  "type": "heuristic",
+  "layer": "tips",
+  "title": "示例攻略条目",
+  "summary": "一条攻略只表达一个独立策略判断。",
+  "body": "这里保存结构化摘要，不保存大段外部原文或完整字幕。",
+  "game_scope": {
+    "game": "Civilization VI",
+    "ruleset": "Gathering Storm",
+    "speed": "Standard",
+    "difficulty": ["Immortal", "Deity"],
+    "map_types": ["Pangaea"]
+  },
+  "applicability": {
+    "phases": ["Ancient", "Classical"],
+    "victory_types": ["Science", "Culture", "General"],
+    "civilizations": ["Any"],
+    "conditions": [
+      "city_count <= 2"
+    ]
+  },
+  "recommendation": {
+    "action": "prioritize_expansion",
+    "priority": "high",
+    "advice": "给玩家的具体建议。",
+    "avoid": "需要避免的常见错误。"
+  },
+  "evidence": {
+    "rationale": ["为什么这个建议成立。"],
+    "counter_examples": ["什么时候这个建议不适用。"]
+  },
+  "source": {
+    "url": "https://example.com/source",
+    "author": "example_author",
+    "source_type": "forum_post",
+    "published_at": "2024-01-01",
+    "collected_at": "2026-06-14",
+    "timestamp_range": null,
+    "license_note": "只保存摘要、来源和短引用；不保存大段原文。"
+  },
+  "quality": {
+    "confidence": "medium",
+    "consensus": "common",
+    "freshness": "stable",
+    "verification_status": "rule_checked",
+    "verified_by_owner": false,
+    "rule_check_status": "passed",
+    "rule_check_notes": ["与底层规则不冲突。"],
+    "rejection_reason": null
+  },
+  "retrieval": {
+    "tags": ["early_game", "expansion"],
+    "keywords": ["铺城", "移民"]
+  }
+}

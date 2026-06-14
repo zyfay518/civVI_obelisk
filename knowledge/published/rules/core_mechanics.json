@@ -1,0 +1,130 @@
+[
+  {
+    "id": "rule_city_count_expands_capacity_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "城市数量扩大总产能上限",
+    "summary": "在文明 6 中，更多城市通常意味着更多人口、区域槽位、地块、建筑和生产队列，因此会提高帝国长期产出上限。",
+    "body": "城市是大多数产出、区域、建筑、项目和单位生产的承载单位。只要忠诚、宜居、住房和防守可控，增加城市数量通常会提高中后期总产能。",
+    "game_scope": {
+      "game": "Civilization VI",
+      "ruleset": "Gathering Storm",
+      "speed": "Any",
+      "difficulty": ["Any"],
+      "map_types": ["Any"]
+    },
+    "mechanics": ["city_count", "population", "district_slots", "production_queue"],
+    "source": {
+      "source_type": "project_rule_baseline",
+      "collected_at": "2026-06-14",
+      "license_note": "项目内规则摘要，不含外部原文。"
+    },
+    "quality": {
+      "confidence": "high",
+      "consensus": "broad",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "rule_check_status": "passed"
+    },
+    "retrieval": {
+      "tags": ["cities", "expansion", "production_capacity", "early_game"],
+      "keywords": ["城市数量", "铺城", "区域槽位", "产能"]
+    }
+  },
+  {
+    "id": "rule_boosts_reduce_research_cost_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "尤里卡和鼓舞降低研究压力",
+    "summary": "科技尤里卡和市政鼓舞会减少对应项目需要投入的研究/文化压力，是追赶科技和文化节奏的重要机制。",
+    "body": "如果一个科技或市政尚未触发对应 boost，硬研会消耗更多产出。规划行动触发 boost 可以提高研究效率。",
+    "game_scope": {
+      "game": "Civilization VI",
+      "ruleset": "Gathering Storm",
+      "speed": "Any",
+      "difficulty": ["Any"],
+      "map_types": ["Any"]
+    },
+    "mechanics": ["technology", "civics", "boosts", "research_efficiency"],
+    "source": {
+      "source_type": "project_rule_baseline",
+      "collected_at": "2026-06-14",
+      "license_note": "项目内规则摘要，不含外部原文。"
+    },
+    "quality": {
+      "confidence": "high",
+      "consensus": "broad",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "rule_check_status": "passed"
+    },
+    "retrieval": {
+      "tags": ["technology", "civics", "eureka", "inspiration", "efficiency"],
+      "keywords": ["尤里卡", "鼓舞", "硬研", "科技落后", "市政"]
+    }
+  },
+  {
+    "id": "rule_trade_routes_are_economic_levers_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "商路是经济和路线连接杠杆",
+    "summary": "商路提供食物、生产、金币、科技、文化、信仰等收益，并能连接道路和外交/旅游相关收益。",
+    "body": "闲置商路容量通常意味着玩家没有充分利用经济、城邦、外交、道路和胜利路线收益。",
+    "game_scope": {
+      "game": "Civilization VI",
+      "ruleset": "Gathering Storm",
+      "speed": "Any",
+      "difficulty": ["Any"],
+      "map_types": ["Any"]
+    },
+    "mechanics": ["trade_routes", "gold", "yields", "roads", "city_states"],
+    "source": {
+      "source_type": "project_rule_baseline",
+      "collected_at": "2026-06-14",
+      "license_note": "项目内规则摘要，不含外部原文。"
+    },
+    "quality": {
+      "confidence": "high",
+      "consensus": "broad",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "rule_check_status": "passed"
+    },
+    "retrieval": {
+      "tags": ["trade", "economy", "gold", "roads"],
+      "keywords": ["商路", "贸易路线", "金币", "道路", "城邦"]
+    }
+  },
+  {
+    "id": "rule_housing_amenities_limit_growth_001",
+    "type": "rule",
+    "layer": "rules",
+    "title": "住房和宜居度限制城市成长效率",
+    "summary": "住房不足会压制人口增长，宜居度不足会影响城市收益和发展效率。",
+    "body": "如果城市人口增长受阻或产出异常低，住房、宜居度、食物和忠诚度应优先纳入诊断。",
+    "game_scope": {
+      "game": "Civilization VI",
+      "ruleset": "Gathering Storm",
+      "speed": "Any",
+      "difficulty": ["Any"],
+      "map_types": ["Any"]
+    },
+    "mechanics": ["housing", "amenities", "growth", "city_yields"],
+    "source": {
+      "source_type": "project_rule_baseline",
+      "collected_at": "2026-06-14",
+      "license_note": "项目内规则摘要，不含外部原文。"
+    },
+    "quality": {
+      "confidence": "high",
+      "consensus": "broad",
+      "freshness": "stable",
+      "verification_status": "rule_checked",
+      "rule_check_status": "passed"
+    },
+    "retrieval": {
+      "tags": ["housing", "amenities", "growth", "cities"],
+      "keywords": ["住房", "宜居度", "人口", "成长", "城市发展"]
+    }
+  }
+]
