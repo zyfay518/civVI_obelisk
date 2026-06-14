@@ -34,6 +34,7 @@ git checkout codex/civ6-ingame-ui
 
 Read this file first, then inspect:
 
+- `docs/PROJECT_PROGRESS.md`
 - `civ6-mod/Obelisk/UI/Obelisk.lua`
 - `civ6-mod/Obelisk/UI/Obelisk.xml`
 - `civ6-mod/Obelisk/Obelisk.modinfo`

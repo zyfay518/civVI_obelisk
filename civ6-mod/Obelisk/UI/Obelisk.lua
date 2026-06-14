@@ -2,6 +2,8 @@
 -- This file intentionally avoids gameplay changes. It only proves that the
 -- overlay context can load and respond inside Civilization VI.
 
+include("TradeSupport");
+
 local AUTO_COLLAPSE_SECONDS:number = 20;
 local MAX_JOURNAL_ENTRIES:number = 12;
 local JOURNAL_PROPERTY_KEY:string = "OBELISK_JOURNAL_V1";
@@ -128,6 +130,39 @@ local function FormatYieldSet(food, production, gold, science, culture, faith, i
     " S" .. tostring(science or 0) ..
     " C" .. tostring(culture or 0) ..
     " Fa" .. tostring(faith or 0);
+end
+
+local function FormatYieldValues(yieldValues:table)
+  if yieldValues == nil then
+    return "-";
+  end
+
+  return FormatYieldSet(
+    yieldValues[YieldTypes.FOOD + 1] or 0,
+    yieldValues[YieldTypes.PRODUCTION + 1] or 0,
+    yieldValues[YieldTypes.GOLD + 1] or 0,
+    yieldValues[YieldTypes.SCIENCE + 1] or 0,
+    yieldValues[YieldTypes.CULTURE + 1] or 0,
+    yieldValues[YieldTypes.FAITH + 1] or 0,
+    true
+  );
+end
+
+local function LookupCityStateCategory(playerID:number)
+  local playerConfig:table = PlayerConfigurations[playerID];
+
+  if playerConfig == nil or GameInfo.Civilizations == nil then
+    return "-";
+  end
+
+  local civilizationType:string = SafeCall(nil, function() return playerConfig:GetCivilizationTypeName(); end);
+  local civilizationInfo:table = civilizationType ~= nil and GameInfo.Civilizations[civilizationType] or nil;
+
+  if civilizationInfo ~= nil and civilizationInfo.CityStateCategory ~= nil then
+    return tostring(civilizationInfo.CityStateCategory);
+  end
+
+  return "-";
 end
 
 local function LookupIndexedName(infoTable, index:number, fallback:string)
@@ -335,8 +370,13 @@ local function CollectSnapshot()
     faithBalance = nil,
     faithPerTurn = nil,
     tourism = nil,
+    domesticTourists = nil,
+    visitingTourists = nil,
+    cultureVictoryTurns = nil,
     score = nil,
     militaryStrength = nil,
+    diplomaticVictoryPoints = nil,
+    citiesFollowingReligion = nil,
     resourceCount = nil,
     resourceSamples = {},
     bonusResourceCount = 0,
@@ -344,22 +384,40 @@ local function CollectSnapshot()
     strategicResourceCount = 0,
     unitCount = nil,
     unitSamples = {},
+    spyCapacity = nil,
+    spyCount = 0,
+    activeSpyCount = 0,
+    idleSpyCount = 0,
+    capturedSpyCount = 0,
+    offMapSpyCount = 0,
+    spySamples = {},
     metCivilizations = nil,
     governmentName = nil,
     policySlotCount = nil,
     policyCards = {},
+    governorPoints = nil,
+    governorPointsSpent = nil,
+    canAppointGovernor = nil,
+    canPromoteGovernor = nil,
+    governorSamples = {},
     majorContacts = nil,
     minorContacts = nil,
     atWarCount = nil,
     diplomacySamples = {},
     diplomacyModifierSamples = {},
+    cityStateSamples = {},
+    cityStateMetCount = 0,
+    cityStateSuzerainCount = 0,
     enabledVictoryCount = nil,
     victorySamples = {},
     victoryDetailSamples = {},
+    victoryMetricSamples = {},
     currentTech = "-",
     currentTechTurns = -1,
+    techCandidateSamples = {},
     currentCivic = "-",
     currentCivicTurns = -1,
+    civicCandidateSamples = {},
     eraName = nil,
     techCompletedCount = nil,
     civicCompletedCount = nil,
@@ -371,16 +429,27 @@ local function CollectSnapshot()
     wonderCount = 0,
     tradeRouteActive = nil,
     tradeRouteCapacity = nil,
-    firstCityLoyaltySummary = nil
+    tradeRouteSamples = {},
+    incomingTradeRouteCount = 0,
+    firstCityLoyaltySummary = nil,
+    revealedPlotCount = 0,
+    visiblePlotCount = 0,
+    ownedPlotCount = 0,
+    strategicMapScore = 0,
+    expansionCandidateCount = 0,
+    borderPressureCount = 0,
+    strategicMapSamples = {}
   };
 
   local player:table = GetLocalPlayerObject();
+  local localPlayerID:number = Game.GetLocalPlayer();
 
   if player == nil then
     return snapshot;
   end
 
   local techs:table = SafeComponent(player, "GetTechs");
+  local ownedCityCenters:table = {};
 
   if techs ~= nil then
     snapshot.science = SafeCall(0, function() return Round(techs:GetScienceYield()); end);
@@ -401,12 +470,34 @@ local function CollectSnapshot()
     end
 
     snapshot.techCompletedCount = completedTechs;
+
+    for tech in GameInfo.Technologies() do
+      if #snapshot.techCandidateSamples >= 5 then
+        break;
+      end
+
+      local techID:number = tech.Index;
+      local canResearch:boolean = SafeCall(false, function() return techs:CanResearch(techID); end);
+
+      if canResearch then
+        local researchCost:number = SafeCall(0, function() return techs:GetResearchCost(techID); end);
+        local researchProgress:number = researchCost > 0 and SafeCall(0, function() return techs:GetResearchProgress(techID); end) or 0;
+        local boostTriggered:boolean = SafeCall(false, function() return techs:HasBoostBeenTriggered(techID); end);
+        table.insert(snapshot.techCandidateSamples, Locale.Lookup(tech.Name) ..
+          " " .. tostring(researchProgress) .. "/" .. tostring(researchCost) ..
+          " " .. tostring(SafeCall(-1, function() return techs:GetTurnsToResearch(techID); end)) .. "回合" ..
+          (boostTriggered and " 已尤里卡" or ""));
+      end
+    end
   end
 
   local culture:table = SafeComponent(player, "GetCulture");
 
   if culture ~= nil then
     snapshot.culture = SafeCall(0, function() return Round(culture:GetCultureYield()); end);
+    snapshot.domesticTourists = SafeCall(nil, function() return culture:GetStaycationers(); end);
+    snapshot.visitingTourists = SafeCall(nil, function() return culture:GetTouristsTo(); end);
+    snapshot.cultureVictoryTurns = SafeCall(nil, function() return culture:GetTurnsUntilVictory(); end);
 
     local civicID:number = SafeCall(-1, function() return culture:GetProgressingCivic(); end);
 
@@ -424,6 +515,25 @@ local function CollectSnapshot()
     end
 
     snapshot.civicCompletedCount = completedCivics;
+
+    for civic in GameInfo.Civics() do
+      if #snapshot.civicCandidateSamples >= 5 then
+        break;
+      end
+
+      local civicID:number = civic.Index;
+      local canProgress:boolean = SafeCall(false, function() return culture:CanProgress(civicID); end);
+
+      if canProgress then
+        local progressCost:number = SafeCall(0, function() return culture:GetCultureCost(civicID); end);
+        local civicProgress:number = progressCost > 0 and SafeCall(0, function() return culture:GetCulturalProgress(civicID); end) or 0;
+        local boostTriggered:boolean = SafeCall(false, function() return culture:HasBoostBeenTriggered(civicID); end);
+        table.insert(snapshot.civicCandidateSamples, Locale.Lookup(civic.Name) ..
+          " " .. tostring(civicProgress) .. "/" .. tostring(progressCost) ..
+          " " .. tostring(SafeCall(-1, function() return culture:GetTurnsToProgressCivic(civicID); end)) .. "回合" ..
+          (boostTriggered and " 已鼓舞" or ""));
+      end
+    end
 
     local governmentID:number = SafeCall(-1, function() return culture:GetCurrentGovernment(); end);
 
@@ -452,6 +562,55 @@ local function CollectSnapshot()
     end
   end
 
+  local governors:table = SafeComponent(player, "GetGovernors");
+
+  if governors ~= nil then
+    snapshot.governorPoints = SafeCall(nil, function() return governors:GetGovernorPoints(); end);
+    snapshot.governorPointsSpent = SafeCall(nil, function() return governors:GetGovernorPointsSpent(); end);
+    snapshot.canAppointGovernor = SafeCall(nil, function() return governors:CanAppoint(); end);
+    snapshot.canPromoteGovernor = SafeCall(nil, function() return governors:CanPromote(); end);
+
+    local governorList:table = SafeCall(nil, function()
+      local hasGovernors, list = governors:GetGovernorList();
+
+      if hasGovernors then
+        return list;
+      end
+
+      return nil;
+    end);
+
+    if type(governorList) == "table" then
+      for _, governor in ipairs(governorList) do
+        if #snapshot.governorSamples >= 5 then
+          break;
+        end
+
+        local governorType:number = SafeCall(-1, function() return governor:GetType(); end);
+        local governorDef:table = governorType ~= -1 and GameInfo.Governors ~= nil and GameInfo.Governors[governorType] or nil;
+        local governorName:string = SafeCall(nil, function() return Locale.Lookup(governor:GetName()); end);
+
+        if (governorName == nil or governorName == "") and governorDef ~= nil then
+          governorName = Locale.Lookup(governorDef.Name);
+        end
+
+        local assignedCity:table = SafeCall(nil, function() return governor:GetAssignedCity(); end);
+        local assignedCityName:string = assignedCity ~= nil and SafeCall("-", function() return assignedCity:GetName(); end) or "-";
+        local established:boolean = SafeCall(false, function() return governor:IsEstablished(); end);
+        local turnsOnSite:number = SafeCall(0, function() return governor:GetTurnsOnSite(); end);
+        local turnsToEstablish:number = SafeCall(0, function() return governor:GetTurnsToEstablish(); end);
+        local turnsUntilEstablished:number = math.max(0, turnsToEstablish - turnsOnSite);
+
+        governorName = governorName or "-";
+        assignedCityName = assignedCityName or "-";
+
+        table.insert(snapshot.governorSamples, governorName ..
+          " 城市" .. assignedCityName ..
+          (established and " 已就位" or (" 建立剩余" .. tostring(turnsUntilEstablished))));
+      end
+    end
+  end
+
   local treasury:table = SafeComponent(player, "GetTreasury");
 
   if treasury ~= nil then
@@ -474,6 +633,8 @@ local function CollectSnapshot()
   if stats ~= nil then
     snapshot.tourism = SafeCall(nil, function() return Round(stats:GetTourism()); end);
     snapshot.militaryStrength = SafeCall(nil, function() return Round(stats:GetMilitaryStrength()); end);
+    snapshot.diplomaticVictoryPoints = SafeCall(nil, function() return stats:GetDiplomaticVictoryPoints(); end);
+    snapshot.citiesFollowingReligion = SafeCall(nil, function() return stats:GetNumCitiesFollowingReligion(); end);
   end
 
   local playerTrade:table = SafeComponent(player, "GetTrade");
@@ -481,6 +642,66 @@ local function CollectSnapshot()
   if playerTrade ~= nil then
     snapshot.tradeRouteActive = SafeCall(nil, function() return playerTrade:GetNumOutgoingRoutes(); end);
     snapshot.tradeRouteCapacity = SafeCall(nil, function() return playerTrade:GetOutgoingRouteCapacity(); end);
+
+    local playerCities:table = SafeComponent(player, "GetCities");
+
+    if playerCities ~= nil then
+      for _, city in playerCities:Members() do
+        if #snapshot.tradeRouteSamples >= 5 then
+          break;
+        end
+
+        local cityTrade:table = SafeComponent(city, "GetTrade");
+        local outgoingRoutes:table = cityTrade ~= nil and SafeCall({}, function() return cityTrade:GetOutgoingRoutes(); end) or {};
+
+        if type(outgoingRoutes) == "table" then
+          for _, route in ipairs(outgoingRoutes) do
+            if #snapshot.tradeRouteSamples >= 5 then
+              break;
+            end
+
+            local destinationPlayerID:number = route.DestinationCityPlayer;
+            local destinationCityID:number = route.DestinationCityID;
+            local destinationPlayer:table = destinationPlayerID ~= nil and Players[destinationPlayerID] or nil;
+            local destinationCity:table = (destinationPlayer ~= nil and destinationCityID ~= nil) and SafeCall(nil, function() return destinationPlayer:GetCities():FindID(destinationCityID); end) or nil;
+
+            if destinationCity ~= nil then
+              local routeInfo:table = SafeCall(nil, function() return GetYieldsForRoute(city, destinationCity); end);
+              local turnsRemaining = route.TurnsRemaining or route.TurnsLeft or route.RemainingTurns or nil;
+              table.insert(snapshot.tradeRouteSamples, city:GetName() ..
+                "→" .. destinationCity:GetName() ..
+                " " .. FormatYieldValues(routeInfo ~= nil and routeInfo.kYieldValues or nil) ..
+                " 剩余" .. AuditValue(turnsRemaining, "?"));
+            end
+          end
+        end
+      end
+    end
+
+    local allPlayers:table = SafeCall({}, function() return Game.GetPlayers(); end);
+
+    if type(allPlayers) == "table" then
+      for _, otherPlayer in ipairs(allPlayers) do
+        if otherPlayer:GetID() ~= Game.GetLocalPlayer() then
+          local otherCities:table = SafeComponent(otherPlayer, "GetCities");
+
+          if otherCities ~= nil then
+            for _, otherCity in otherCities:Members() do
+              local otherCityTrade:table = SafeComponent(otherCity, "GetTrade");
+              local outgoingRoutes:table = otherCityTrade ~= nil and SafeCall({}, function() return otherCityTrade:GetOutgoingRoutes(); end) or {};
+
+              if type(outgoingRoutes) == "table" then
+                for _, route in ipairs(outgoingRoutes) do
+                  if route.DestinationCityPlayer == Game.GetLocalPlayer() then
+                    snapshot.incomingTradeRouteCount = snapshot.incomingTradeRouteCount + 1;
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
   end
 
   local greatPeoplePoints:table = SafeComponent(player, "GetGreatPeoplePoints");
@@ -536,13 +757,14 @@ local function CollectSnapshot()
 
     for _, unit in units:Members() do
       unitCount = unitCount + 1;
+      local unitType:number = SafeCall(-1, function() return unit:GetType(); end);
+      local unitDef:table = unitType ~= -1 and GameInfo.Units ~= nil and GameInfo.Units[unitType] or nil;
 
       if #snapshot.unitSamples < 5 then
-        local unitType:number = SafeCall(-1, function() return unit:GetType(); end);
         local unitName:string = "-";
 
-        if unitType ~= -1 and GameInfo.Units[unitType] ~= nil then
-          unitName = Locale.Lookup(GameInfo.Units[unitType].Name);
+        if unitDef ~= nil then
+          unitName = Locale.Lookup(unitDef.Name);
         end
 
         table.insert(snapshot.unitSamples, unitName);
@@ -557,27 +779,77 @@ local function CollectSnapshot()
             " XP" .. tostring(xp));
         end
       end
+
+      if unitDef ~= nil and unitDef.Spy == true then
+        snapshot.spyCount = snapshot.spyCount + 1;
+
+        local operationType:number = SafeCall(-1, function() return unit:GetSpyOperation(); end);
+        local spyName:string = SafeCall(nil, function() return Locale.Lookup(unit:GetName()); end) or Locale.Lookup(unitDef.Name);
+        local spyPlot:table = SafeCall(nil, function() return Map.GetPlot(unit:GetX(), unit:GetY()); end);
+        local ownerCity:table = spyPlot ~= nil and SafeCall(nil, function() return Cities.GetPlotPurchaseCity(spyPlot); end) or nil;
+        local cityName:string = ownerCity ~= nil and SafeCall("-", function() return ownerCity:GetName(); end) or "-";
+
+        if operationType == -1 then
+          snapshot.idleSpyCount = snapshot.idleSpyCount + 1;
+
+          if #snapshot.spySamples < 5 then
+            table.insert(snapshot.spySamples, spyName .. " 待命 城市" .. cityName);
+          end
+        else
+          snapshot.activeSpyCount = snapshot.activeSpyCount + 1;
+
+          if #snapshot.spySamples < 5 then
+            local operationInfo:table = GameInfo.UnitOperations ~= nil and GameInfo.UnitOperations[operationType] or nil;
+            local operationName:string = operationInfo ~= nil and Locale.Lookup(operationInfo.Description) or "任务";
+            local remainingTurns:number = math.max(0, SafeCall(Game.GetCurrentGameTurn(), function() return unit:GetSpyOperationEndTurn(); end) - Game.GetCurrentGameTurn());
+            table.insert(snapshot.spySamples, spyName .. " " .. operationName .. " 城市" .. cityName .. " 剩余" .. tostring(remainingTurns));
+          end
+        end
+      end
     end
 
     snapshot.unitCount = unitCount;
   end
 
-  local diplomacy:table = SafeComponent(player, "GetDiplomacy");
+  local playerDiplomacy:table = SafeComponent(player, "GetDiplomacy");
 
-  if diplomacy ~= nil then
-    local metCount:number = 0;
+  if playerDiplomacy ~= nil then
+    snapshot.spyCapacity = SafeCall(nil, function() return playerDiplomacy:GetSpyCapacity(); end);
 
-    for playerID:number = 0, 63 do
-      if playerID ~= Game.GetLocalPlayer() and Players[playerID] ~= nil then
-        local hasMet:boolean = SafeCall(false, function() return diplomacy:HasMet(playerID); end);
+    local offMapSpyCount:number = SafeCall(0, function() return playerDiplomacy:GetNumSpiesOffMap(); end);
 
-        if hasMet then
-          metCount = metCount + 1;
+    for spyIndex = 0, offMapSpyCount - 1, 1 do
+      local spyInfo:table = SafeCall(nil, function() return playerDiplomacy:GetNthOffMapSpy(localPlayerID, spyIndex); end);
+
+      if spyInfo ~= nil and spyInfo.ReturnTurn ~= -1 then
+        snapshot.offMapSpyCount = snapshot.offMapSpyCount + 1;
+        snapshot.spyCount = snapshot.spyCount + 1;
+
+        if #snapshot.spySamples < 5 then
+          local remainingTurns:number = math.max(0, (spyInfo.ReturnTurn or Game.GetCurrentGameTurn()) - Game.GetCurrentGameTurn());
+          table.insert(snapshot.spySamples, (spyInfo.Name or "间谍") .. " 返程中 剩余" .. tostring(remainingTurns));
         end
       end
     end
 
-    snapshot.metCivilizations = metCount;
+    for _, otherPlayer in ipairs(Game.GetPlayers()) do
+      local otherDiplomacy:table = SafeComponent(otherPlayer, "GetDiplomacy");
+      local capturedCount:number = otherDiplomacy ~= nil and SafeCall(0, function() return otherDiplomacy:GetNumSpiesCaptured(); end) or 0;
+
+      for spyIndex = 0, capturedCount - 1, 1 do
+        local spyInfo:table = SafeCall(nil, function() return otherDiplomacy:GetNthCapturedSpy(otherPlayer:GetID(), spyIndex); end);
+
+        if spyInfo ~= nil and spyInfo.OwningPlayer == localPlayerID then
+          snapshot.capturedSpyCount = snapshot.capturedSpyCount + 1;
+          snapshot.spyCount = snapshot.spyCount + 1;
+
+          if #snapshot.spySamples < 5 then
+            local captorName:string = GetPlayerCivilizationName(otherPlayer:GetID());
+            table.insert(snapshot.spySamples, (spyInfo.Name or "间谍") .. " 被俘 于" .. captorName);
+          end
+        end
+      end
+    end
   end
 
   snapshot.majorContacts = 0;
@@ -587,8 +859,6 @@ local function CollectSnapshot()
   local localDiplomacy:table = SafeComponent(player, "GetDiplomacy");
 
   if localDiplomacy ~= nil then
-    local localPlayerID:number = Game.GetLocalPlayer();
-
     for playerID:number = 0, 63 do
       local otherPlayer:table = Players[playerID];
 
@@ -606,10 +876,40 @@ local function CollectSnapshot()
 
           if isMinor then
             snapshot.minorContacts = snapshot.minorContacts + 1;
+            snapshot.cityStateMetCount = snapshot.cityStateMetCount + 1;
           end
 
           if isAtWar then
             snapshot.atWarCount = snapshot.atWarCount + 1;
+          end
+
+          if isMinor and #snapshot.cityStateSamples < 5 then
+            local playerConfig:table = PlayerConfigurations[playerID];
+            local displayName:string = playerConfig ~= nil and Locale.Lookup(playerConfig:GetCivilizationShortDescription()) or tostring(playerID);
+            local influence:table = SafeComponent(otherPlayer, "GetInfluence");
+            local envoyCount:number = influence ~= nil and SafeCall(0, function() return influence:GetTokensReceived(localPlayerID); end) or 0;
+            local suzerainID:number = influence ~= nil and SafeCall(-1, function() return influence:GetSuzerain(); end) or -1;
+            local isSuzerain:boolean = suzerainID == localPlayerID;
+            local questCount:number = 0;
+            local questsManager:table = SafeCall(nil, function() return Game.GetQuestsManager(); end);
+
+            if isSuzerain then
+              snapshot.cityStateSuzerainCount = snapshot.cityStateSuzerainCount + 1;
+            end
+
+            if questsManager ~= nil and GameInfo.Quests ~= nil then
+              for questInfo in GameInfo.Quests() do
+                if SafeCall(false, function() return questsManager:HasActiveQuestFromPlayer(localPlayerID, playerID, questInfo.Index); end) then
+                  questCount = questCount + 1;
+                end
+              end
+            end
+
+            table.insert(snapshot.cityStateSamples, displayName ..
+              " " .. LookupCityStateCategory(playerID) ..
+              " 使者" .. tostring(envoyCount) ..
+              (isSuzerain and " 宗主" or "") ..
+              " 任务" .. tostring(questCount));
           end
 
           if #snapshot.diplomacySamples < 4 then
@@ -664,6 +964,8 @@ local function CollectSnapshot()
         end
       end
     end
+
+    snapshot.metCivilizations = snapshot.majorContacts;
   end
 
   snapshot.enabledVictoryCount = 0;
@@ -700,6 +1002,80 @@ local function CollectSnapshot()
     end
   end
 
+  local scienceProjectSamples:table = {};
+
+  if GameInfo.Projects ~= nil then
+    local localCities:table = SafeComponent(player, "GetCities");
+    local playerStats:table = SafeComponent(player, "GetStats");
+
+    if localCities ~= nil then
+      for project in GameInfo.Projects() do
+        if #scienceProjectSamples >= 5 then
+          break;
+        end
+
+        local projectType:string = tostring(project.ProjectType or "");
+        local isScienceProject:boolean =
+          project.SpaceRace == true or
+          project.SpaceRace == 1 or
+          string.find(projectType, "SPACE") ~= nil or
+          string.find(projectType, "SATELLITE") ~= nil or
+          string.find(projectType, "MOON") ~= nil or
+          string.find(projectType, "MARS") ~= nil or
+          string.find(projectType, "EXOPLANET") ~= nil;
+
+        if isScienceProject then
+          local completedCount:number = playerStats ~= nil and SafeCall(0, function() return playerStats:GetNumProjectsAdvanced(project.Index); end) or 0;
+          local bestProgress:number = 0;
+          local bestCost:number = 0;
+
+          for _, city in localCities:Members() do
+            local buildQueue:table = SafeComponent(city, "GetBuildQueue");
+
+            if buildQueue ~= nil then
+              local projectCost:number = SafeCall(0, function() return buildQueue:GetProjectCost(project.Index); end);
+              local projectProgress:number = SafeCall(0, function() return buildQueue:GetProjectProgress(project.Index); end);
+
+              if projectCost > 0 and projectProgress > bestProgress then
+                bestProgress = projectProgress;
+                bestCost = projectCost;
+              elseif projectCost > 0 and bestCost == 0 then
+                bestCost = projectCost;
+              end
+            end
+          end
+
+          table.insert(scienceProjectSamples, Locale.Lookup(project.Name) ..
+            " 完成" .. tostring(completedCount) ..
+            " 进度" .. tostring(bestProgress) .. "/" .. tostring(bestCost));
+        end
+      end
+    end
+  end
+
+  if snapshot.domesticTourists ~= nil or snapshot.visitingTourists ~= nil then
+    table.insert(snapshot.victoryMetricSamples, "文化游客 " ..
+      AuditValue(snapshot.visitingTourists, "?") .. "/" ..
+      AuditValue(snapshot.domesticTourists, "?") ..
+      " 预计" .. AuditValue(snapshot.cultureVictoryTurns, "?") .. "回合");
+  end
+
+  if snapshot.diplomaticVictoryPoints ~= nil then
+    table.insert(snapshot.victoryMetricSamples, "外交胜利点 " .. tostring(snapshot.diplomaticVictoryPoints));
+  end
+
+  if snapshot.citiesFollowingReligion ~= nil then
+    table.insert(snapshot.victoryMetricSamples, "宗教城市 " .. tostring(snapshot.citiesFollowingReligion));
+  end
+
+  for _, projectSample in ipairs(scienceProjectSamples) do
+    if #snapshot.victoryMetricSamples >= 6 then
+      break;
+    end
+
+    table.insert(snapshot.victoryMetricSamples, projectSample);
+  end
+
   local cities:table = SafeComponent(player, "GetCities");
 
   if cities ~= nil then
@@ -708,8 +1084,12 @@ local function CollectSnapshot()
 
     for _, city in cities:Members() do
       cityIndex = cityIndex + 1;
+      local cityX:number = SafeCall(-1, function() return city:GetX(); end);
+      local cityY:number = SafeCall(-1, function() return city:GetY(); end);
       local citySnapshot:table = {
         name = SafeCall("-", function() return Locale.Lookup(city:GetName()); end),
+        x = cityX,
+        y = cityY,
         population = 0,
         production = "-",
         productionTurns = -1,
@@ -730,6 +1110,10 @@ local function CollectSnapshot()
         loyaltyLevel = nil,
         yields = {}
       };
+
+      if cityX >= 0 and cityY >= 0 then
+        table.insert(ownedCityCenters, { x = cityX, y = cityY, name = citySnapshot.name });
+      end
 
       citySnapshot.population = SafeCall(0, function() return city:GetPopulation(); end);
       citySnapshot.yields.food = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.FOOD)); end);
@@ -870,6 +1254,93 @@ local function CollectSnapshot()
     end
   end
 
+  local localVisibility:table = PlayersVisibility ~= nil and PlayersVisibility[localPlayerID] or nil;
+
+  if localVisibility ~= nil then
+    local plotCount:number = SafeCall(0, function() return Map.GetPlotCount(); end);
+    local maxPlotsToScan:number = math.min(plotCount, 12000);
+    local expansionSamples:table = {};
+    local pressureSamples:table = {};
+
+    for plotIndex = 0, maxPlotsToScan - 1, 1 do
+      local plot:table = SafeCall(nil, function() return Map.GetPlotByIndex(plotIndex); end);
+
+      if plot ~= nil then
+        local plotX:number = SafeCall(-1, function() return plot:GetX(); end);
+        local plotY:number = SafeCall(-1, function() return plot:GetY(); end);
+        local isRevealed:boolean = plotX >= 0 and plotY >= 0 and SafeCall(false, function() return localVisibility:IsRevealed(plotX, plotY); end);
+
+        if isRevealed then
+          snapshot.revealedPlotCount = snapshot.revealedPlotCount + 1;
+
+          if SafeCall(false, function() return localVisibility:IsVisible(plotX, plotY); end) then
+            snapshot.visiblePlotCount = snapshot.visiblePlotCount + 1;
+          end
+
+          local ownerID:number = SafeCall(-1, function() return plot:GetOwner(); end);
+
+          if ownerID == localPlayerID then
+            snapshot.ownedPlotCount = snapshot.ownedPlotCount + 1;
+          elseif ownerID ~= -1 then
+            for _, cityCenter in ipairs(ownedCityCenters) do
+              local distance:number = SafeCall(99, function() return Map.GetPlotDistance(cityCenter.x, cityCenter.y, plotX, plotY); end);
+
+              if distance <= 5 then
+                snapshot.borderPressureCount = snapshot.borderPressureCount + 1;
+
+                if #pressureSamples < 3 then
+                  table.insert(pressureSamples, "近" .. cityCenter.name .. " 距" .. tostring(distance) .. " 有他方边境");
+                end
+
+                break;
+              end
+            end
+          elseif SafeCall(false, function() return plot:IsWater(); end) == false then
+            for _, cityCenter in ipairs(ownedCityCenters) do
+              local distance:number = SafeCall(99, function() return Map.GetPlotDistance(cityCenter.x, cityCenter.y, plotX, plotY); end);
+
+              if distance >= 4 and distance <= 8 then
+                snapshot.expansionCandidateCount = snapshot.expansionCandidateCount + 1;
+
+                if #expansionSamples < 3 then
+                  local featureText:string = SafeCall(false, function() return plot:IsHills(); end) and "丘陵" or "陆地";
+                  table.insert(expansionSamples, "近" .. cityCenter.name .. " 距" .. tostring(distance) .. " " .. featureText);
+                end
+
+                break;
+              end
+            end
+          end
+        end
+      end
+    end
+
+    snapshot.strategicMapScore =
+      snapshot.cityCount * 20 +
+      snapshot.ownedPlotCount +
+      math.floor(snapshot.revealedPlotCount / 10) +
+      snapshot.expansionCandidateCount -
+      snapshot.borderPressureCount;
+
+    table.insert(snapshot.strategicMapSamples, "已揭示" .. tostring(snapshot.revealedPlotCount) .. " 可见" .. tostring(snapshot.visiblePlotCount) .. " 本方地块" .. tostring(snapshot.ownedPlotCount));
+
+    for _, sample in ipairs(expansionSamples) do
+      if #snapshot.strategicMapSamples >= 5 then
+        break;
+      end
+
+      table.insert(snapshot.strategicMapSamples, "扩张候选 " .. sample);
+    end
+
+    for _, sample in ipairs(pressureSamples) do
+      if #snapshot.strategicMapSamples >= 5 then
+        break;
+      end
+
+      table.insert(snapshot.strategicMapSamples, "边境压力 " .. sample);
+    end
+  end
+
   return snapshot;
 end
 
@@ -974,18 +1445,18 @@ local function BuildAuditAnswer(snapshot:table, isChinese:boolean)
 
   if isChinese then
     table.insert(lines, "后台数据状态：Obelisk 已记录当前快照。");
-    table.insert(lines, "已采集：玩家产出、科技/市政、金币/信仰、城市、单位、资源、政策、外交、胜利、伟人、贸易路线、首城忠诚。");
+    table.insert(lines, "已采集：玩家产出、科技/市政候选、金币/信仰、城市、单位、间谍、资源、政策、总督、外交、城邦、胜利深层指标、伟人、商路明细、全城忠诚、战略地图评分。");
     table.insert(lines, "当前规模：回合 " .. tostring(snapshot.turn) .. "；城市 " .. tostring(snapshot.cityCount) .. "；单位 " .. AuditValue(snapshot.unitCount, "?") .. "；已见文明 " .. AuditValue(snapshot.metCivilizations, "?") .. "。");
     table.insert(lines, "后台策略：完整数据只保留当前快照；历史只保存轻量摘要，用于回合对比和之后的 AI 上下文。");
-    table.insert(lines, "下一批后台数据：全城忠诚、商路明细、科技/市政候选、城邦使者、胜利深层指标。");
+    table.insert(lines, "地图边界：战略评分只扫描已揭示/可见格子，不读取隐藏资源或敌方隐藏单位。");
     return table.concat(lines, "[NEWLINE]");
   end
 
   table.insert(lines, "Backend data status: Obelisk recorded the current snapshot.");
-  table.insert(lines, "Captured: yields, tech/civics, gold/faith, cities, units, resources, policies, diplomacy, victory, great people, trade routes, capital loyalty.");
+  table.insert(lines, "Captured: yields, tech/civic candidates, gold/faith, cities, units, spies, resources, policies, governors, diplomacy, city-states, deep victory metrics, great people, trade route details, all-city loyalty, strategic map scoring.");
   table.insert(lines, "Current scale: turn " .. tostring(snapshot.turn) .. "; cities " .. tostring(snapshot.cityCount) .. "; units " .. AuditValue(snapshot.unitCount, "?") .. "; met civs " .. AuditValue(snapshot.metCivilizations, "?") .. ".");
   table.insert(lines, "Storage policy: full data is current-snapshot only; history keeps compact summaries for comparison and future AI context.");
-  table.insert(lines, "Next backend batch: all-city loyalty, trade route details, tech/civic candidates, city-state envoys, deeper victory metrics.");
+  table.insert(lines, "Map boundary: strategic scoring only scans revealed/visible plots; it does not read hidden resources or hidden enemy units.");
   return table.concat(lines, "[NEWLINE]");
 end
 

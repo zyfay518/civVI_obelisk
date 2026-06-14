@@ -13,10 +13,88 @@
     "known_player_average_science": 47,
     "estimated_techs_behind": 4
   },
+  "technology": {
+    "current": "Apprenticeship",
+    "turns_remaining": 4,
+    "completed_count": 18,
+    "candidate_samples": [
+      "Education 92/335 9回合 已尤里卡"
+    ]
+  },
+  "civics": {
+    "current": "Feudalism",
+    "turns_remaining": 3,
+    "completed_count": 15,
+    "candidate_samples": [
+      "Civil Service 120/275 6回合 已鼓舞"
+    ]
+  },
+  "trade": {
+    "outgoing_active": 3,
+    "outgoing_capacity": 4,
+    "incoming_count": 1,
+    "route_samples": [
+      "Mbanza Kongo→Nan Madol 食1 产0 金3 科0 文2 信0 剩余?"
+    ]
+  },
+  "city_states": {
+    "met_count": 4,
+    "suzerain_count": 1,
+    "samples": [
+      "Nan Madol CULTURAL 使者3 宗主 任务0"
+    ]
+  },
+  "governors": {
+    "points": 2,
+    "points_spent": 1,
+    "can_appoint": true,
+    "can_promote": false,
+    "samples": [
+      "Pingala 城市Mbanza Kongo 已就位"
+    ]
+  },
+  "spies": {
+    "capacity": 2,
+    "count": 1,
+    "active": 1,
+    "idle": 0,
+    "captured": 0,
+    "off_map": 0,
+    "samples": [
+      "Agent X 窃取科技 城市Nan Madol 剩余4"
+    ]
+  },
+  "strategic_map": {
+    "revealed_plots": 230,
+    "visible_plots": 48,
+    "owned_plots": 31,
+    "score": 154,
+    "expansion_candidates": 18,
+    "border_pressure": 3,
+    "samples": [
+      "已揭示230 可见48 本方地块31",
+      "扩张候选 近Mbanza Kongo 距5 丘陵"
+    ]
+  },
+  "victory_metrics": {
+    "domestic_tourists": 18,
+    "visiting_tourists": 7,
+    "culture_victory_turns": -1,
+    "diplomatic_victory_points": 3,
+    "cities_following_religion": 4,
+    "samples": [
+      "文化游客 7/18 预计?回合",
+      "外交胜利点 3"
+    ]
+  },
   "cities": [
     {
       "name": "Mbanza Kongo",
       "population": 3,
+      "loyalty": 100,
+      "loyaltyMax": 100,
+      "loyaltyPerTurn": 0,
+      "loyaltyLevel": "Full Loyalty",
       "districts": [],
       "buildings": [],
       "science_per_turn": 2.1
