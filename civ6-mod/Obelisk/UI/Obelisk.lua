@@ -11,6 +11,7 @@ local isExpanded:boolean = false;
 local collapseElapsed:number = 0;
 local currentMode:string = "advice";
 local currentQuestion:string = "";
+local isResettingQueryBox:boolean = false;
 local journal:table = {};
 local journalSequence:number = 0;
 local persistenceLoadStatus:string = "not_checked";
@@ -380,6 +381,8 @@ local function CollectSnapshot()
     citiesFollowingReligion = nil,
     resourceCount = nil,
     resourceSamples = {},
+    horseCount = 0,
+    ironCount = 0,
     bonusResourceCount = 0,
     luxuryResourceCount = 0,
     strategicResourceCount = 0,
@@ -432,6 +435,7 @@ local function CollectSnapshot()
     tradeRouteCapacity = nil,
     tradeRouteSamples = {},
     incomingTradeRouteCount = 0,
+    averageCityProduction = 0,
     firstCityLoyaltySummary = nil,
     revealedPlotCount = 0,
     visiblePlotCount = 0,
@@ -741,8 +745,17 @@ local function CollectSnapshot()
             snapshot.strategicResourceCount = snapshot.strategicResourceCount + 1;
           end
 
+          local resourceType:string = tostring(resource.ResourceType or "");
+          local resourceName:string = tostring(Locale.Lookup(resource.Name) or "");
+
+          if resourceType == "RESOURCE_HORSES" or string.find(resourceType, "HORSE") ~= nil or string.find(resourceName, "马") ~= nil or string.find(string.lower(resourceName), "horse") ~= nil then
+            snapshot.horseCount = amount;
+          elseif resourceType == "RESOURCE_IRON" or string.find(resourceType, "IRON") ~= nil or string.find(resourceName, "铁") ~= nil or string.find(string.lower(resourceName), "iron") ~= nil then
+            snapshot.ironCount = amount;
+          end
+
           if #snapshot.resourceSamples < 5 then
-            table.insert(snapshot.resourceSamples, Locale.Lookup(resource.Name) .. " " .. tostring(amount));
+            table.insert(snapshot.resourceSamples, resourceName .. " " .. tostring(amount));
           end
         end
       end
@@ -1082,6 +1095,8 @@ local function CollectSnapshot()
   if cities ~= nil then
     snapshot.cityCount = SafeCall(0, function() return cities:GetCount(); end);
     local cityIndex:number = 0;
+    local totalProduction:number = 0;
+    local productionCityCount:number = 0;
 
     for _, city in cities:Members() do
       cityIndex = cityIndex + 1;
@@ -1122,6 +1137,11 @@ local function CollectSnapshot()
       citySnapshot.yields.science = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.SCIENCE)); end);
       citySnapshot.yields.culture = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.CULTURE)); end);
       citySnapshot.yields.gold = SafeCall(nil, function() return Round(city:GetYield(YieldTypes.GOLD)); end);
+
+      if citySnapshot.yields.production ~= nil then
+        totalProduction = totalProduction + citySnapshot.yields.production;
+        productionCityCount = productionCityCount + 1;
+      end
 
       local growth:table = SafeComponent(city, "GetGrowth");
 
@@ -1252,6 +1272,10 @@ local function CollectSnapshot()
           loyaltyPerTurnText ..
           "/回合)";
       end
+    end
+
+    if productionCityCount > 0 then
+      snapshot.averageCityProduction = Round(totalProduction / productionCityCount);
     end
   end
 
@@ -1494,71 +1518,240 @@ local function TextContains(text:string, pattern:string)
   return text ~= nil and pattern ~= nil and string.find(text, pattern) ~= nil;
 end
 
+local function TextContainsAny(text:string, patterns:table)
+  for _, pattern in ipairs(patterns) do
+    if TextContains(text, pattern) then
+      return true;
+    end
+  end
+
+  return false;
+end
+
+local function IsEarlyEra(eraName:string)
+  local era:string = tostring(eraName or "");
+  return era == "" or
+    TextContains(era, "远古") or
+    TextContains(era, "古典") or
+    TextContains(string.lower(era), "ancient") or
+    TextContains(string.lower(era), "classical");
+end
+
+local function NewFlowScore(id:string, name:string, goal:string)
+  return {
+    id = id,
+    name = name,
+    goal = goal,
+    score = 0,
+    maxScore = 0,
+    blockers = {},
+    warnings = {},
+    matched = {},
+    checks = {}
+  };
+end
+
+local function AddFlowCondition(flow:table, passed:boolean, weight:number, matchedText:string, failedText:string, checkText:string, isBlocking:boolean)
+  flow.maxScore = flow.maxScore + weight;
+
+  if passed then
+    flow.score = flow.score + weight;
+    if matchedText ~= nil and matchedText ~= "" then
+      table.insert(flow.matched, matchedText);
+    end
+  else
+    if isBlocking then
+      table.insert(flow.blockers, failedText);
+    else
+      table.insert(flow.warnings, failedText);
+    end
+  end
+
+  if checkText ~= nil and checkText ~= "" then
+    table.insert(flow.checks, checkText);
+  end
+end
+
+local function FinalizeFlowScore(flow:table)
+  if flow.maxScore > 0 then
+    flow.score = math.floor((flow.score * 100 / flow.maxScore) + 0.5);
+  end
+
+  if #flow.blockers > 0 and flow.score > 35 then
+    flow.score = 35;
+  end
+
+  if #flow.blockers > 0 then
+    flow.fit = "不适合";
+  elseif flow.score >= 75 then
+    flow.fit = "适合";
+  elseif flow.score >= 50 then
+    flow.fit = "有条件适合";
+  elseif flow.score >= 30 then
+    flow.fit = "偏弱";
+  else
+    flow.fit = "不适合";
+  end
+
+  return flow;
+end
+
+local function ScoreXiaomaFlow(snapshot:table)
+  local flow:table = NewFlowScore("xiaoma", "小马流", "用早期骑兵窗口压制近邻或夺取关键城市");
+  local horseCount:number = snapshot.horseCount or 0;
+
+  AddFlowCondition(flow, horseCount > 0, 30, "已看到马资源 " .. tostring(horseCount), "没有稳定马资源", "资源栏 / 地图马资源", true);
+  AddFlowCondition(flow, IsEarlyEra(snapshot.eraName), 20, "仍在早期骑兵窗口", "时代窗口偏晚", "右上角时代信息", true);
+  AddFlowCondition(flow, (snapshot.majorContacts or 0) >= 1, 15, "已见主要文明 " .. tostring(snapshot.majorContacts or 0), "还没有明确主要文明目标", "外交面板 / 已见文明", false);
+  AddFlowCondition(flow, (snapshot.goldPerTurn or 0) >= 5, 15, "金币收入可支撑维护", "金币收入偏低，维护和升级有压力", "顶部金币收入", false);
+  AddFlowCondition(flow, snapshot.militaryStrength == nil or snapshot.militaryStrength >= 80, 10, "军力不是明显短板", "当前军力偏弱，窗口还没形成", "外交界面 / 军力对比", false);
+
+  table.insert(flow.checks, "科技树：是否接近骑马");
+  table.insert(flow.checks, "目标城市：是否已有城墙或反骑兵单位");
+  return FinalizeFlowScore(flow);
+end
+
+local function ScoreCampusFlow(snapshot:table)
+  local flow:table = NewFlowScore("campus", "学院流", "用学院和科研积累建立科技领先或追赶能力");
+
+  AddFlowCondition(flow, (snapshot.science or 0) < 35, 20, "科研仍有提升空间", "当前科研压力不高，学院不是唯一短板", "顶部科研 / 科技树", false);
+  AddFlowCondition(flow, (snapshot.cityCount or 0) >= 2, 20, "城市数能承载学院投资", "城市太少，通常先扩张更稳", "城市数量 / 城市总览", true);
+  AddFlowCondition(flow, (snapshot.averageCityProduction or 0) >= 6, 15, "平均产能可支撑区域建设", "城市产能偏低，硬造学院会拖节奏", "城市生产力 / 建造回合", false);
+  AddFlowCondition(flow, (snapshot.atWarCount or 0) == 0, 10, "没有被战争强迫转产", "战争压力下学院优先级下降", "外交面板 / 战争状态", false);
+  AddFlowCondition(flow, true, 15, "科技路线对通用发展有效", "", "当前科技 / 尤里卡候选", false);
+
+  table.insert(flow.checks, "地图：山脉、礁石、地热的学院相邻");
+  table.insert(flow.checks, "城市：哪座城能最快完成学院");
+  return FinalizeFlowScore(flow);
+end
+
+local function ScoreTradeRouteFlow(snapshot:table)
+  local flow:table = NewFlowScore("trade", "大商路流", "通过商路容量、金币、道路和城邦滚动经济优势");
+  local activeRoutes:number = snapshot.tradeRouteActive or 0;
+  local capacity:number = snapshot.tradeRouteCapacity or 0;
+  local unusedRoutes:number = math.max(0, capacity - activeRoutes);
+
+  AddFlowCondition(flow, capacity > 0, 25, "已有商路容量 " .. tostring(capacity), "没有商路容量，无法启动商路流", "顶部商路容量", true);
+  AddFlowCondition(flow, unusedRoutes > 0, 25, "存在空余商路 " .. tostring(unusedRoutes), "商路已跑满，继续补商人收益下降", "顶部商路容量 / 商人单位", false);
+  AddFlowCondition(flow, (snapshot.minorContacts or 0) >= 1, 10, "已遇见城邦 " .. tostring(snapshot.minorContacts or 0), "外部商路目标不足", "城邦面板 / 外交面板", false);
+  AddFlowCondition(flow, (snapshot.goldPerTurn or 0) < 20, 15, "金币仍有提升空间", "金币收入已较高，商路不一定是最短板", "顶部金币收入", false);
+
+  if (snapshot.atWarCount or 0) > 0 then
+    table.insert(flow.warnings, "战争状态下商人路线有被掠夺风险");
+  end
+
+  table.insert(flow.checks, "路线安全：蛮族、战争、敌军位置");
+  table.insert(flow.checks, "路线选择：内商补生产/食物，外商补金币/城邦收益");
+  return FinalizeFlowScore(flow);
+end
+
+local function ScoreAllFlows(snapshot:table)
+  local flows:table = {
+    ScoreXiaomaFlow(snapshot),
+    ScoreCampusFlow(snapshot),
+    ScoreTradeRouteFlow(snapshot)
+  };
+
+  table.sort(flows, function(left:table, right:table) return left.score > right.score; end);
+  return flows;
+end
+
+local function BuildFlowAnswer(flow:table)
+  local reasons:string = #flow.matched > 0 and table.concat(flow.matched, "；") or "核心条件不足";
+  local problems:table = {};
+
+  for _, blocker in ipairs(flow.blockers) do
+    table.insert(problems, blocker);
+  end
+
+  for _, warning in ipairs(flow.warnings) do
+    table.insert(problems, warning);
+  end
+
+  local problemText:string = #problems > 0 and table.concat(problems, "；") or "暂无明显阻断项";
+  local checkText:string = #flow.checks > 0 and table.concat(flow.checks, "；") or "继续观察当前局势";
+
+  return flow.name .. "：" .. flow.fit .. "，适配评分 " .. tostring(flow.score) .. "/100。[NEWLINE]" ..
+    "判断依据：" .. reasons .. "。[NEWLINE]" ..
+    "风险/缺口：" .. problemText .. "。[NEWLINE]" ..
+    "你下一步应在游戏里看：" .. checkText .. "。[NEWLINE]" ..
+    "这不是替你下指令，只是把当前可见局势和规则条件对齐。";
+end
+
+local function BuildFlowRankingAnswer(snapshot:table)
+  local flows:table = ScoreAllFlows(snapshot);
+  local lines:table = {
+    "当前更适合的流派排序："
+  };
+
+  for index:number = 1, #flows do
+    local flow:table = flows[index];
+    table.insert(lines, tostring(index) .. ". " .. flow.name .. "：" .. tostring(flow.score) .. "/100，" .. flow.fit);
+  end
+
+  table.insert(lines, "建议先看第一名的风险项，再决定是否执行。");
+  table.insert(lines, "可继续问：为什么不适合小马流？/ 学院流下一步看什么？/ 大商路流缺什么？");
+  return table.concat(lines, "[NEWLINE]");
+end
+
+local function BuildNextStepAnswer(snapshot:table)
+  local flows:table = ScoreAllFlows(snapshot);
+  local best:table = flows[1];
+
+  return "我会先按三个层级检查当前局势：[NEWLINE]" ..
+    "1. 基础盘：城市 " .. tostring(snapshot.cityCount) .. "，平均产能 " .. AuditValue(snapshot.averageCityProduction, "?") .. "，科技 " .. tostring(snapshot.science) .. "/回合，文化 " .. tostring(snapshot.culture) .. "/回合。[NEWLINE]" ..
+    "2. 执行资源：金币 " .. tostring(snapshot.goldPerTurn) .. "/回合，马 " .. tostring(snapshot.horseCount or 0) .. "，商路 " .. AuditValue(snapshot.tradeRouteActive, "?") .. "/" .. AuditValue(snapshot.tradeRouteCapacity, "?") .. "。[NEWLINE]" ..
+    "3. 外部机会：已见文明 " .. AuditValue(snapshot.majorContacts, "?") .. "，城邦 " .. AuditValue(snapshot.minorContacts, "?") .. "，战争数 " .. AuditValue(snapshot.atWarCount, "?") .. "。[NEWLINE]" ..
+    "当前规则匹配最高的是：" .. best.name .. "（" .. tostring(best.score) .. "/100，" .. best.fit .. "）。[NEWLINE]" ..
+    "下一步优先确认：" .. table.concat(best.checks, "；") .. "。";
+end
+
 local function BuildQuestionAnswer(snapshot:table, isChinese:boolean, question:string)
   local query:string = question or "";
 
   if isChinese then
-    if TextContains(query, "小马") or TextContains(query, "骑兵") or TextContains(query, "马") then
-      local blockers:table = {};
-
-      if snapshot.goldPerTurn < 5 then
-        table.insert(blockers, "金币收入偏低，维护和升级会有压力");
-      end
-
-      if snapshot.majorContacts == nil or snapshot.majorContacts <= 0 then
-        table.insert(blockers, "还没有明确的主要文明目标");
-      end
-
-      if snapshot.militaryStrength ~= nil and snapshot.militaryStrength < 80 then
-        table.insert(blockers, "当前军力偏弱，窗口可能还没形成");
-      end
-
-      if #blockers > 0 then
-        return "我会谨慎看待小马流。[NEWLINE]" ..
-          "不利点：" .. table.concat(blockers, "；") .. "。[NEWLINE]" ..
-          "你下一步应在游戏里确认：资源栏是否有马、科技树是否接近骑马、附近文明是否有城墙、金币收入是否能支撑军队。";
-      end
-
-      return "这局可以考虑小马流，但还需要确认马资源和对手防御。[NEWLINE]" ..
-        "有利点：已见文明 " .. AuditValue(snapshot.majorContacts, "?") .. " 个，金币收入 " .. AuditValue(snapshot.goldPerTurn, "?") .. "/回合，军力 " .. AuditValue(snapshot.militaryStrength, "?") .. "。[NEWLINE]" ..
-        "你下一步应看：资源栏的马、科技树的骑马、目标城市是否有城墙、升级/维护金币是否够。";
+    if TextContainsAny(query, { "更适合", "哪个流派", "流派排序", "小马流还是", "学院流还是", "商路流还是" }) then
+      return BuildFlowRankingAnswer(snapshot);
     end
 
-    if TextContains(query, "学院") or TextContains(query, "科技") or TextContains(query, "科研") then
-      return "学院流的关键不是只造学院，而是看城市数、生产力和科研压力是否匹配。[NEWLINE]" ..
-        "当前可见状态：城市 " .. tostring(snapshot.cityCount) .. "，科技 " .. tostring(snapshot.science) .. "/回合，当前科技“" .. AuditValue(snapshot.currentTech, "?") .. "”。[NEWLINE]" ..
-        "你下一步应看：哪些城市能放高相邻学院、是否有山脉/礁石/地热、生产力是否够建区域、有没有未触发的尤里卡。";
+    if TextContainsAny(query, { "小马", "骑兵", "马" }) then
+      return BuildFlowAnswer(ScoreXiaomaFlow(snapshot));
     end
 
-    if TextContains(query, "商路") or TextContains(query, "贸易") or TextContains(query, "商人") then
-      local unusedRoutes:number = 0;
-
-      if snapshot.tradeRouteActive ~= nil and snapshot.tradeRouteCapacity ~= nil then
-        unusedRoutes = math.max(0, snapshot.tradeRouteCapacity - snapshot.tradeRouteActive);
-      end
-
-      return "大商路流要先看容量能不能跑满，以及路线是否安全。[NEWLINE]" ..
-        "当前可见状态：商路 " .. AuditValue(snapshot.tradeRouteActive, "?") .. "/" .. AuditValue(snapshot.tradeRouteCapacity, "?") .. "，空余 " .. tostring(unusedRoutes) .. "，金币 " .. AuditValue(snapshot.goldPerTurn, "?") .. "/回合。[NEWLINE]" ..
-        "你下一步应看：是否要补商人、内商补生产/食物还是外商补金币、路线是否会被蛮族或战争掠夺。";
+    if TextContainsAny(query, { "学院", "科技", "科研" }) then
+      return BuildFlowAnswer(ScoreCampusFlow(snapshot));
     end
 
-    if TextContains(query, "适合") or TextContains(query, "该干嘛") or TextContains(query, "关注") or TextContains(query, "下一步") then
-      return "我会先看三个优先级：[NEWLINE]" ..
-        "1. 发展上限：城市 " .. tostring(snapshot.cityCount) .. "，首城人口 " .. tostring(snapshot.firstCityPopulation) .. "，当前生产“" .. AuditValue(snapshot.firstCityProduction, "?") .. "”。[NEWLINE]" ..
-        "2. 节奏短板：科技 " .. tostring(snapshot.science) .. "/回合，文化 " .. tostring(snapshot.culture) .. "/回合，金币 " .. tostring(snapshot.goldPerTurn) .. "/回合。[NEWLINE]" ..
-        "3. 可执行机会：商路 " .. AuditValue(snapshot.tradeRouteActive, "?") .. "/" .. AuditValue(snapshot.tradeRouteCapacity, "?") .. "，已见文明 " .. AuditValue(snapshot.majorContacts, "?") .. "，城邦 " .. AuditValue(snapshot.minorContacts, "?") .. "。[NEWLINE]" ..
-        "如果你要我判断具体流派，可以直接问：我适合小马流吗 / 学院流吗 / 大商路流吗。";
+    if TextContainsAny(query, { "商路", "贸易", "商人" }) then
+      return BuildFlowAnswer(ScoreTradeRouteFlow(snapshot));
     end
 
-    return "我收到你的问题了，但当前版本还没有接大模型，只能做本地规则判断。[NEWLINE]" ..
-      "你可以先问这些可验收问题：[NEWLINE]" ..
+    if TextContainsAny(query, { "适合", "该干嘛", "关注", "下一步", "建议", "现在做什么" }) then
+      return BuildNextStepAnswer(snapshot);
+    end
+
+    return "当前版本先使用本地知识库评分，不接大模型，也不替玩家直接下指令。[NEWLINE]" ..
+      "你可以验收这些问题：[NEWLINE]" ..
       "1. 我现在适合玩小马流吗？[NEWLINE]" ..
       "2. 我现在适合学院流吗？[NEWLINE]" ..
       "3. 我现在适合大商路流吗？[NEWLINE]" ..
-      "4. 我下一步应该关注什么？";
+      "4. 我现在更适合小马流还是学院流？[NEWLINE]" ..
+      "5. 我下一步应该关注什么？";
   end
 
-  return "I received your question. This build uses local rule routing only, not an AI model yet.[NEWLINE]" ..
+  if TextContainsAny(string.lower(query), { "horse", "cavalry" }) then
+    return BuildFlowAnswer(ScoreXiaomaFlow(snapshot));
+  end
+
+  if TextContainsAny(string.lower(query), { "campus", "science" }) then
+    return BuildFlowAnswer(ScoreCampusFlow(snapshot));
+  end
+
+  if TextContainsAny(string.lower(query), { "trade", "merchant" }) then
+    return BuildFlowAnswer(ScoreTradeRouteFlow(snapshot));
+  end
+
+  return "This build uses the local knowledge matcher, not a large model yet.[NEWLINE]" ..
     "Try: Am I suited for a horse rush? / Am I suited for a campus strategy? / What should I focus on next?";
 end
 
@@ -1733,9 +1926,19 @@ local function SubmitQuery(textString:string)
   currentQuestion = query ~= "" and query or GetQueryPlaceholder();
   currentMode = "advice";
   SetExpanded(true);
+
+  if Controls.QueryEditBox ~= nil then
+    isResettingQueryBox = true;
+    Controls.QueryEditBox:ClearString();
+    isResettingQueryBox = false;
+  end
 end
 
 local function OnQueryChanged()
+  if isResettingQueryBox then
+    return;
+  end
+
   if Controls.QueryEditBox ~= nil then
     currentQuestion = NormalizeQueryText(Controls.QueryEditBox:GetText());
   end
