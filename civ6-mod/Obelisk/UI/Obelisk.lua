@@ -4,12 +4,13 @@
 
 include("TradeSupport");
 
-local AUTO_COLLAPSE_SECONDS:number = 20;
+local AUTO_COLLAPSE_SECONDS:number = 45;
 local MAX_JOURNAL_ENTRIES:number = 12;
 local JOURNAL_PROPERTY_KEY:string = "OBELISK_JOURNAL_V1";
 local isExpanded:boolean = false;
 local collapseElapsed:number = 0;
-local currentMode:string = "data";
+local currentMode:string = "advice";
+local currentQuestion:string = "";
 local journal:table = {};
 local journalSequence:number = 0;
 local persistenceLoadStatus:string = "not_checked";
@@ -1463,10 +1464,10 @@ end
 local function BuildAdviceAnswer(snapshot:table, isChinese:boolean)
   if isChinese then
     if snapshot.cityCount <= 0 then
-      return "规则建议：[NEWLINE]1. 还没有城市，优先观察首都落城位置。[NEWLINE]2. 落城后再校验科技、文化、金币和生产数据是否同步变化。";
+      return "我会先看落城位置。[NEWLINE]1. 还没有城市，优先观察首都落城位置。[NEWLINE]2. 落城后再校验科技、文化、金币和生产数据是否同步变化。";
     end
 
-    local advice:string = "规则建议：[NEWLINE]";
+    local advice:string = "我会先看这几项：[NEWLINE]";
     advice = advice .. "1. 先核对左上角产出：科技 " .. tostring(snapshot.science) .. "/回合、文化 " .. tostring(snapshot.culture) .. "/回合、金币 " .. tostring(snapshot.goldPerTurn) .. "/回合。[NEWLINE]";
     advice = advice .. "2. 观察城市“" .. snapshot.firstCityName .. "”的人口和生产队列，当前生产是“" .. snapshot.firstCityProduction .. "”。[NEWLINE]";
 
@@ -1480,13 +1481,85 @@ local function BuildAdviceAnswer(snapshot:table, isChinese:boolean)
   end
 
   if snapshot.cityCount <= 0 then
-    return "Rule advice:[NEWLINE]1. No city yet; inspect the capital settle location first.[NEWLINE]2. After settling, re-check science, culture, gold, and production changes.";
+    return "I would inspect the settle location first.[NEWLINE]1. No city yet; inspect the capital settle location first.[NEWLINE]2. After settling, re-check science, culture, gold, and production changes.";
   end
 
-  return "Rule advice:[NEWLINE]" ..
+  return "I would inspect these first:[NEWLINE]" ..
     "1. Cross-check top-left yields: science " .. tostring(snapshot.science) .. "/turn, culture " .. tostring(snapshot.culture) .. "/turn, gold " .. tostring(snapshot.goldPerTurn) .. "/turn.[NEWLINE]" ..
     "2. Inspect " .. snapshot.firstCityName .. "'s population and build queue. Current production: " .. snapshot.firstCityProduction .. ".[NEWLINE]" ..
     "3. This is a fixed rule response for testing data-grounded advice.";
+end
+
+local function TextContains(text:string, pattern:string)
+  return text ~= nil and pattern ~= nil and string.find(text, pattern) ~= nil;
+end
+
+local function BuildQuestionAnswer(snapshot:table, isChinese:boolean, question:string)
+  local query:string = question or "";
+
+  if isChinese then
+    if TextContains(query, "小马") or TextContains(query, "骑兵") or TextContains(query, "马") then
+      local blockers:table = {};
+
+      if snapshot.goldPerTurn < 5 then
+        table.insert(blockers, "金币收入偏低，维护和升级会有压力");
+      end
+
+      if snapshot.majorContacts == nil or snapshot.majorContacts <= 0 then
+        table.insert(blockers, "还没有明确的主要文明目标");
+      end
+
+      if snapshot.militaryStrength ~= nil and snapshot.militaryStrength < 80 then
+        table.insert(blockers, "当前军力偏弱，窗口可能还没形成");
+      end
+
+      if #blockers > 0 then
+        return "我会谨慎看待小马流。[NEWLINE]" ..
+          "不利点：" .. table.concat(blockers, "；") .. "。[NEWLINE]" ..
+          "你下一步应在游戏里确认：资源栏是否有马、科技树是否接近骑马、附近文明是否有城墙、金币收入是否能支撑军队。";
+      end
+
+      return "这局可以考虑小马流，但还需要确认马资源和对手防御。[NEWLINE]" ..
+        "有利点：已见文明 " .. AuditValue(snapshot.majorContacts, "?") .. " 个，金币收入 " .. AuditValue(snapshot.goldPerTurn, "?") .. "/回合，军力 " .. AuditValue(snapshot.militaryStrength, "?") .. "。[NEWLINE]" ..
+        "你下一步应看：资源栏的马、科技树的骑马、目标城市是否有城墙、升级/维护金币是否够。";
+    end
+
+    if TextContains(query, "学院") or TextContains(query, "科技") or TextContains(query, "科研") then
+      return "学院流的关键不是只造学院，而是看城市数、生产力和科研压力是否匹配。[NEWLINE]" ..
+        "当前可见状态：城市 " .. tostring(snapshot.cityCount) .. "，科技 " .. tostring(snapshot.science) .. "/回合，当前科技“" .. AuditValue(snapshot.currentTech, "?") .. "”。[NEWLINE]" ..
+        "你下一步应看：哪些城市能放高相邻学院、是否有山脉/礁石/地热、生产力是否够建区域、有没有未触发的尤里卡。";
+    end
+
+    if TextContains(query, "商路") or TextContains(query, "贸易") or TextContains(query, "商人") then
+      local unusedRoutes:number = 0;
+
+      if snapshot.tradeRouteActive ~= nil and snapshot.tradeRouteCapacity ~= nil then
+        unusedRoutes = math.max(0, snapshot.tradeRouteCapacity - snapshot.tradeRouteActive);
+      end
+
+      return "大商路流要先看容量能不能跑满，以及路线是否安全。[NEWLINE]" ..
+        "当前可见状态：商路 " .. AuditValue(snapshot.tradeRouteActive, "?") .. "/" .. AuditValue(snapshot.tradeRouteCapacity, "?") .. "，空余 " .. tostring(unusedRoutes) .. "，金币 " .. AuditValue(snapshot.goldPerTurn, "?") .. "/回合。[NEWLINE]" ..
+        "你下一步应看：是否要补商人、内商补生产/食物还是外商补金币、路线是否会被蛮族或战争掠夺。";
+    end
+
+    if TextContains(query, "适合") or TextContains(query, "该干嘛") or TextContains(query, "关注") or TextContains(query, "下一步") then
+      return "我会先看三个优先级：[NEWLINE]" ..
+        "1. 发展上限：城市 " .. tostring(snapshot.cityCount) .. "，首城人口 " .. tostring(snapshot.firstCityPopulation) .. "，当前生产“" .. AuditValue(snapshot.firstCityProduction, "?") .. "”。[NEWLINE]" ..
+        "2. 节奏短板：科技 " .. tostring(snapshot.science) .. "/回合，文化 " .. tostring(snapshot.culture) .. "/回合，金币 " .. tostring(snapshot.goldPerTurn) .. "/回合。[NEWLINE]" ..
+        "3. 可执行机会：商路 " .. AuditValue(snapshot.tradeRouteActive, "?") .. "/" .. AuditValue(snapshot.tradeRouteCapacity, "?") .. "，已见文明 " .. AuditValue(snapshot.majorContacts, "?") .. "，城邦 " .. AuditValue(snapshot.minorContacts, "?") .. "。[NEWLINE]" ..
+        "如果你要我判断具体流派，可以直接问：我适合小马流吗 / 学院流吗 / 大商路流吗。";
+    end
+
+    return "我收到你的问题了，但当前版本还没有接大模型，只能做本地规则判断。[NEWLINE]" ..
+      "你可以先问这些可验收问题：[NEWLINE]" ..
+      "1. 我现在适合玩小马流吗？[NEWLINE]" ..
+      "2. 我现在适合学院流吗？[NEWLINE]" ..
+      "3. 我现在适合大商路流吗？[NEWLINE]" ..
+      "4. 我下一步应该关注什么？";
+  end
+
+  return "I received your question. This build uses local rule routing only, not an AI model yet.[NEWLINE]" ..
+    "Try: Am I suited for a horse rush? / Am I suited for a campus strategy? / What should I focus on next?";
 end
 
 local function BuildCompareAnswer(snapshot:table, previous:table, isChinese:boolean)
@@ -1556,17 +1629,21 @@ local function RefreshAnswer(mode:string, recordReason:string)
   local snapshot:table = RecordSnapshot(recordReason or currentMode);
   local isChinese:boolean = IsChineseUI();
 
-  local fallbackQuestion:string = currentMode == "data" and "What is the current data?" or "What should I inspect right now?";
-  local fallbackMetrics:string = "Turn {1} · Science {2}/turn · Culture {3}/turn · Gold {4} ({5}/turn) · Cities {6}";
-  local answer:string = BuildDataAnswer(snapshot, isChinese);
+  local fallbackQuestion:string = currentQuestion ~= "" and currentQuestion or "Ask Obelisk";
+  local fallbackMetrics:string = "Turn {1} · Cities {6} · Obelisk reads visible state only";
+  local answer:string = BuildQuestionAnswer(snapshot, isChinese, currentQuestion);
 
   if isChinese then
-    fallbackQuestion = currentMode == "data" and "当前数据是什么？" or "根据当前数据，有什么建议？";
-    fallbackMetrics = "回合 {1} · 科技 {2}/回合 · 文化 {3}/回合 · 金币 {4}（{5}/回合）· 城市 {6}";
+    fallbackQuestion = currentQuestion ~= "" and currentQuestion or "向 Obelisk 提问";
+    fallbackMetrics = "基于当前可见局势回答 · 回合 {1} · 城市 {6}";
+  end
+
+  if currentMode == "data" then
+    answer = BuildQuestionAnswer(snapshot, isChinese, currentQuestion);
   end
 
   if currentMode == "advice" then
-    answer = BuildAdviceAnswer(snapshot, isChinese);
+    answer = BuildQuestionAnswer(snapshot, isChinese, currentQuestion);
   end
 
   if currentMode == "compare" then
@@ -1628,9 +1705,55 @@ local function SetExpanded(expanded:boolean)
   end
 end
 
-local function OnAsk()
-  currentMode = "data";
+local function GetQueryPlaceholder()
+  return IsChineseUI() and "问 Obelisk：这局我该关注什么？" or "Ask Obelisk: what should I focus on?";
+end
+
+local function NormalizeQueryText(value:string)
+  if value == nil or type(value) ~= "string" then
+    return "";
+  end
+
+  local placeholder:string = GetQueryPlaceholder();
+
+  if value == placeholder then
+    return "";
+  end
+
+  return value;
+end
+
+local function SubmitQuery(textString:string)
+  local query:string = NormalizeQueryText(textString);
+
+  if query == "" and Controls.QueryEditBox ~= nil then
+    query = NormalizeQueryText(Controls.QueryEditBox:GetText());
+  end
+
+  currentQuestion = query ~= "" and query or GetQueryPlaceholder();
+  currentMode = "advice";
   SetExpanded(true);
+end
+
+local function OnQueryChanged()
+  if Controls.QueryEditBox ~= nil then
+    currentQuestion = NormalizeQueryText(Controls.QueryEditBox:GetText());
+  end
+end
+
+local function OnQueryFocus()
+  if Controls.QueryEditBox ~= nil and Controls.QueryEditBox:GetText() == GetQueryPlaceholder() then
+    Controls.QueryEditBox:ClearString();
+  end
+end
+
+local function OnAsk()
+  currentMode = "advice";
+  SetExpanded(true);
+end
+
+local function OnSubmit()
+  SubmitQuery("");
 end
 
 local function OnData()
@@ -1670,32 +1793,41 @@ end
 local function Initialize()
   ContextPtr:SetHide(false);
 
-  if Controls.AskButton ~= nil then
-    local askFallback:string = IsChineseUI() and "询问 Obelisk..." or "Ask Obelisk...";
-    Controls.AskButton:SetText(LookupOrDefault("LOC_OBELISK_ASK", askFallback));
+  if Controls.QueryEditBox ~= nil then
+    Controls.QueryEditBox:SetText(GetQueryPlaceholder());
+  end
+
+  if Controls.SubmitButton ~= nil then
+    Controls.SubmitButton:SetText(IsChineseUI() and "发送" or "Ask");
   end
 
   if Controls.DataButton ~= nil then
+    Controls.DataButton:SetHide(true);
     Controls.DataButton:SetText(IsChineseUI() and "当前数据" or "Data");
   end
 
   if Controls.AdviceButton ~= nil then
-    Controls.AdviceButton:SetText(IsChineseUI() and "规则建议" or "Advice");
+    Controls.AdviceButton:SetHide(true);
+    Controls.AdviceButton:SetText("");
   end
 
   if Controls.CompareButton ~= nil then
+    Controls.CompareButton:SetHide(true);
     Controls.CompareButton:SetText(IsChineseUI() and "回合对比" or "Compare");
   end
 
   if Controls.MemoryButton ~= nil then
+    Controls.MemoryButton:SetHide(true);
     Controls.MemoryButton:SetText(IsChineseUI() and "记忆状态" or "Memory");
   end
 
   if Controls.CitiesButton ~= nil then
+    Controls.CitiesButton:SetHide(true);
     Controls.CitiesButton:SetText(IsChineseUI() and "城市总览" or "Cities");
   end
 
   if Controls.AuditButton ~= nil then
+    Controls.AuditButton:SetHide(true);
     Controls.AuditButton:SetText(IsChineseUI() and "后台状态" or "Backend");
   end
 
@@ -1709,8 +1841,14 @@ local function Initialize()
     end
   end);
 
-  if Controls.AskButton ~= nil then
-    Controls.AskButton:RegisterCallback(Mouse.eLClick, OnAsk);
+  if Controls.QueryEditBox ~= nil then
+    Controls.QueryEditBox:RegisterCommitCallback(SubmitQuery);
+    Controls.QueryEditBox:RegisterStringChangedCallback(OnQueryChanged);
+    Controls.QueryEditBox:RegisterHasFocusCallback(OnQueryFocus);
+  end
+
+  if Controls.SubmitButton ~= nil then
+    Controls.SubmitButton:RegisterCallback(Mouse.eLClick, OnSubmit);
   end
 
   if Controls.CollapseButton ~= nil then

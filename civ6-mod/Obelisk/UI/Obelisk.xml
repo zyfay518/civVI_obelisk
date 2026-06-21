@@ -1,25 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context>
-  <Container ID="ObeliskRoot" Anchor="C,T" Offset="0,48" Size="960,640" ConsumeMouse="0">
-    <Container ID="IdlePanel" Anchor="C,T" Size="360,46" ConsumeMouse="1">
-      <Grid ID="IdleBackground" Anchor="C,C" Size="360,46" Texture="Controls_SubContainerFill" SliceCorner="12,12" SliceTextureSize="24,24" Color="255,255,255,70" />
-      <Grid Anchor="C,C" Size="358,44" Texture="Controls_SubContainerFill" SliceCorner="12,12" SliceTextureSize="24,24" Color="255,255,255,22" />
-      <TextButton ID="AskButton" Anchor="C,C" Size="336,34" String="Ask Obelisk..." FontSize="18" />
+  <Container ID="ObeliskRoot" Anchor="C,T" Offset="0,44" Size="760,360" ConsumeMouse="0">
+    <Container ID="IdlePanel" Anchor="C,T" Size="560,38" ConsumeMouse="1">
+      <Grid ID="IdleBackground" Anchor="C,C" Size="560,38" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="20,20,20,52" />
+      <Grid Anchor="C,C" Size="556,34" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,18" />
+      <EditBox ID="QueryEditBox" Anchor="L,C" Offset="18,0" Size="452,26" EditMode="1" CallOnChar="1" MaxLength="120" String="输入问题..." Style="FontNormal16" ColorSet="BodyTextCool" FontStyle="stroke" ConsumeMouse="1" />
+      <TextButton ID="SubmitButton" Anchor="R,C" Offset="-18,0" Size="58,28" String="发送" FontSize="13" />
     </Container>
 
-    <Container ID="ExpandedPanel" Anchor="C,T" Offset="0,56" Size="960,584" ConsumeMouse="1" Hidden="1">
-      <Grid ID="AnswerBackground" Anchor="C,C" Size="960,584" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,82" />
-      <Grid Anchor="C,C" Size="956,580" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,24" />
-      <Label ID="QuestionLabel" Anchor="L,T" Offset="22,14" Size="894,26" String="What should I inspect right now?" FontSize="17" Color="255,255,255,255" />
-      <TextButton ID="DataButton" Anchor="L,T" Offset="22,44" Size="108,30" String="当前数据" FontSize="13" />
-      <TextButton ID="AdviceButton" Anchor="L,T" Offset="138,44" Size="108,30" String="规则建议" FontSize="13" />
-      <TextButton ID="CompareButton" Anchor="L,T" Offset="254,44" Size="108,30" String="回合对比" FontSize="13" />
-      <TextButton ID="MemoryButton" Anchor="L,T" Offset="370,44" Size="108,30" String="记忆状态" FontSize="13" />
-      <TextButton ID="CitiesButton" Anchor="L,T" Offset="486,44" Size="108,30" String="城市总览" FontSize="13" />
-      <TextButton ID="AuditButton" Anchor="L,T" Offset="602,44" Size="108,30" String="后台状态" FontSize="13" />
-      <Label ID="MetricsLabel" Anchor="L,T" Offset="22,82" Size="916,32" String="" FontSize="13" Color="78,74,62,255" Wrap="1" />
-      <Label ID="AnswerLabel" Anchor="L,T" Offset="22,118" Size="916,446" Wrap="1" FontSize="12" Color="28,24,18,255" String="" />
-      <TextButton ID="CollapseButton" Anchor="R,T" Offset="-12,10" Size="30,26" String="X" FontSize="13" />
+    <Container ID="ExpandedPanel" Anchor="C,T" Offset="0,42" Size="760,296" ConsumeMouse="1" Hidden="1">
+      <Grid ID="AnswerBackground" Anchor="C,C" Size="760,296" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="20,20,20,118" />
+      <Grid Anchor="C,C" Size="756,292" Texture="Controls_SubContainerFill" SliceCorner="14,14" SliceTextureSize="28,28" Color="255,255,255,16" />
+      <Label ID="QuestionLabel" Anchor="L,T" Offset="20,14" Size="694,26" String="Ask Obelisk" FontSize="15" Color="255,255,255,245" />
+      <Label ID="MetricsLabel" Anchor="L,T" Offset="20,44" Size="714,30" String="" FontSize="12" Color="210,210,210,235" Wrap="1" />
+      <Label ID="AnswerLabel" Anchor="L,T" Offset="20,80" Size="718,188" Wrap="1" FontSize="13" Color="255,255,255,245" String="" />
+      <TextButton ID="CollapseButton" Anchor="R,T" Offset="-14,10" Size="28,24" String="×" FontSize="13" />
     </Container>
   </Container>
 </Context>
