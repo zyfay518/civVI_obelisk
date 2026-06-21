@@ -13,6 +13,19 @@ The knowledge base is split into:
 
 Data files use JSON arrays so Python Consul can load them without extra dependencies.
 
+Current local meta-flow coverage:
+
+- 小马流
+- 学院流
+- 大商路流
+- 征服流
+- 宗教流
+- 文化流
+- 工业流
+- 扩张流
+
+These entries are deterministic, rule-checked seed knowledge. Network player tips should enter `review/` first and only move into published knowledge after rule consistency checks.
+
 Rules for adding data:
 
 1. Do not store full forum posts, full articles, full subtitles, or full transcripts.

@@ -1,0 +1,28 @@
+﻿{
+  "id": "meta_expansion_flow",
+  "name": "扩张流",
+  "type": "strategy_flow",
+  "core_goal": "通过移民、地块和城市数量扩大基础盘，为后续科技、文化、商路或征服提供承载。",
+  "applicable_civilizations": ["Any"],
+  "applicable_leaders": ["Any"],
+  "applicable_maps": ["Any"],
+  "victory_targets": ["General", "Science", "Culture", "Domination"],
+  "key_prerequisites": [
+    {"id": "not_enough_cities", "description": "当前城市数量仍有扩张收益", "state_key": "city_count", "operator": "<", "value": 6, "weight": 25, "required": false, "visible_in_game": "城市数量"},
+    {"id": "expansion_space", "description": "可见范围内存在扩张候选或边境空间", "state_key": "strategic_map.expansion_candidates", "operator": ">", "value": 0, "weight": 20, "required": false, "visible_in_game": "地图可见地块 / 推荐城址"}
+  ],
+  "state_match_conditions": [
+    {"id": "early_or_mid", "description": "仍处在扩张收益较高阶段", "state_key": "turn", "operator": "<", "value": 120, "weight": 15, "visible_in_game": "当前回合"},
+    {"id": "production_support", "description": "产能可以承担移民/工人机会成本", "state_key": "average_city_production", "operator": ">=", "value": 4, "weight": 10, "visible_in_game": "城市生产力"},
+    {"id": "not_full_war", "description": "没有被战争迫使全部转军事", "state_key": "at_war_count", "operator": "==", "value": 0, "weight": 10, "visible_in_game": "外交面板 / 战争状态"}
+  ],
+  "bad_fit_conditions": [
+    {"id": "no_space", "description": "可见扩张空间不足，继续扩张可能收益很低。", "state_key": "strategic_map.expansion_candidates", "operator": "<=", "value": 0, "severity": "warning", "visible_in_game": "地图可见地块"}
+  ],
+  "transition_conditions": [{"description": "城市数量达到基础规模后，应转学院、商路、工业、文化或军事兑现。", "trigger": "city_count_high"}],
+  "common_failure_reasons": ["只扩张不补工人和基础设施。", "落城没有考虑水源、奢侈、战略资源和忠诚。", "战争压力下强行移民。"],
+  "recommended_game_data": ["city_count", "strategic_map.expansion_candidates", "average_city_production", "gold_per_turn", "at_war_count"],
+  "player_explanation_template": "扩张流主要看城市数量、可见城址、产能、战争压力和后续路线承载。",
+  "confidence": "medium",
+  "source": {"type": "project_seed", "status": "rule_checked"}
+}

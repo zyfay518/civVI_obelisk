@@ -1,0 +1,28 @@
+﻿{
+  "id": "meta_culture_flow",
+  "name": "文化流",
+  "type": "strategy_flow",
+  "core_goal": "通过文化、旅游、伟人、奇观和国土吸引力推进文化胜利或政策节奏优势。",
+  "applicable_civilizations": ["France", "Greece", "China", "America", "Any"],
+  "applicable_leaders": ["Any"],
+  "applicable_maps": ["Any"],
+  "victory_targets": ["Culture", "General Tempo"],
+  "key_prerequisites": [
+    {"id": "culture_income", "description": "文化收入具备市政节奏基础", "state_key": "culture", "operator": ">=", "value": 10, "weight": 20, "required": true, "visible_in_game": "顶部文化收入"},
+    {"id": "city_base", "description": "城市数量能承载剧院、奇观或国家公园布局", "state_key": "city_count", "operator": ">=", "value": 3, "weight": 20, "required": false, "visible_in_game": "城市数量"}
+  ],
+  "state_match_conditions": [
+    {"id": "tourism_not_done", "description": "旅游仍有成长空间", "state_key": "tourism", "operator": "<", "value": 100, "weight": 10, "visible_in_game": "文化胜利面板 / 旅游"},
+    {"id": "not_at_war", "description": "没有被战争打断文化建设节奏", "state_key": "at_war_count", "operator": "==", "value": 0, "weight": 10, "visible_in_game": "外交面板 / 战争状态"},
+    {"id": "faith_or_gold_support", "description": "有金币或信仰支撑后续伟人、建筑或自然学家", "state_key": "support_economy", "operator": ">=", "value": 1, "weight": 10, "visible_in_game": "顶部金币/信仰"}
+  ],
+  "bad_fit_conditions": [
+    {"id": "low_culture", "description": "文化产出太低，政策和旅游体系会启动过慢。", "state_key": "culture", "operator": "<", "value": 6, "severity": "warning", "visible_in_game": "顶部文化收入"}
+  ],
+  "transition_conditions": [{"description": "如果旅游启动慢，应先补经济、文化和国土规划，再转胜利组件。", "trigger": "tourism_low AND economy_low"}],
+  "common_failure_reasons": ["只堆文化不转旅游。", "忽视开放边界、贸易路线和政策卡。", "城市和国土规划不足导致国家公园/海滨度假区难成型。"],
+  "recommended_game_data": ["culture", "tourism", "faith_per_turn", "gold_per_turn", "city_count", "victory_metric_samples"],
+  "player_explanation_template": "文化流主要看文化节奏、旅游转化、伟人/奇观/国土吸引力和外交开放条件。",
+  "confidence": "medium",
+  "source": {"type": "project_seed", "status": "rule_checked"}
+}

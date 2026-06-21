@@ -17,6 +17,10 @@ def map_obelisk_snapshot_to_state(
 
     at_war_count = _to_int(_first(snapshot, "atWarCount", "at_war_count"), 0)
     resources = _extract_resources(snapshot)
+    faith_per_turn = _to_number(_first(snapshot, "faithPerTurn", "faith_per_turn"), 0)
+    faith_balance = _to_number(_first(snapshot, "faithBalance", "faith_balance"), 0)
+    tourism = _to_number(_first(snapshot, "tourism"), 0)
+    gold_per_turn = _to_number(_first(snapshot, "goldPerTurn", "gold_per_turn"), 0)
 
     return {
         "turn": _to_int(_first(snapshot, "turn"), 0),
@@ -24,7 +28,11 @@ def map_obelisk_snapshot_to_state(
         "city_count": _to_int(_first(snapshot, "cityCount", "city_count"), 0),
         "science": _to_number(_first(snapshot, "science"), 0),
         "culture": _to_number(_first(snapshot, "culture"), 0),
-        "gold_per_turn": _to_number(_first(snapshot, "goldPerTurn", "gold_per_turn"), 0),
+        "gold_per_turn": gold_per_turn,
+        "faith_per_turn": faith_per_turn,
+        "faith_balance": faith_balance,
+        "tourism": tourism,
+        "support_economy": int(gold_per_turn >= 10 or faith_per_turn >= 10),
         "military_strength": _to_number(
             _first(snapshot, "militaryStrength", "military_strength"),
             0,
@@ -36,6 +44,14 @@ def map_obelisk_snapshot_to_state(
         "desired_victory": desired_victory,
         "current_tech": _first(snapshot, "currentTech", "current_tech", default="-"),
         "current_civic": _first(snapshot, "currentCivic", "current_civic", default="-"),
+        "religion_summary": _first(snapshot, "religionSummary", "religion_summary", default="-"),
+        "district_count": _to_int(_first(snapshot, "districtCount", "district_count"), 0),
+        "victory_metric_samples": _first(
+            snapshot,
+            "victoryMetricSamples",
+            "victory_metric_samples",
+            default=[],
+        ),
         "resources": resources,
         "trade_route_active": trade_route_active,
         "trade_route_capacity": trade_route_capacity,
@@ -115,6 +131,7 @@ def _extract_resources(snapshot: dict[str, Any]) -> dict[str, int]:
     return {
         "horses": horses,
         "iron": iron,
+        "strategic_total": horses + iron,
     }
 
 

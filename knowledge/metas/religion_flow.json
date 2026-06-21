@@ -1,0 +1,28 @@
+﻿{
+  "id": "meta_religion_flow",
+  "name": "宗教流",
+  "type": "strategy_flow",
+  "core_goal": "通过信仰产出、宗教单位和神学体系推进宗教胜利或信仰经济。",
+  "applicable_civilizations": ["Russia", "Arabia", "India", "Khmer", "Any"],
+  "applicable_leaders": ["Any"],
+  "applicable_maps": ["Any"],
+  "victory_targets": ["Religion", "Faith Economy"],
+  "key_prerequisites": [
+    {"id": "faith_income", "description": "已有稳定信仰收入", "state_key": "faith_per_turn", "operator": ">=", "value": 6, "weight": 25, "required": true, "visible_in_game": "顶部信仰收入"},
+    {"id": "religion_relevance", "description": "宗教或信仰经济是当前可用路线", "state_key": "desired_victory", "operator": "in", "value": ["Religion", "Faith", "General", "宗教", "信仰", "通用"], "weight": 15, "required": false, "visible_in_game": "玩家目标 / 胜利路线判断"}
+  ],
+  "state_match_conditions": [
+    {"id": "enough_cities", "description": "城市数量能承载圣地和传教压力", "state_key": "city_count", "operator": ">=", "value": 2, "weight": 15, "visible_in_game": "城市数量"},
+    {"id": "not_major_war", "description": "没有被战争迫使信仰转军事或防守", "state_key": "at_war_count", "operator": "==", "value": 0, "weight": 10, "visible_in_game": "外交面板 / 战争状态"},
+    {"id": "faith_can_scale", "description": "信仰收入有继续放大空间", "state_key": "faith_per_turn", "operator": "<", "value": 40, "weight": 10, "visible_in_game": "顶部信仰收入"}
+  ],
+  "bad_fit_conditions": [
+    {"id": "no_faith", "description": "信仰收入不足，无法支撑宗教单位和信仰经济。", "state_key": "faith_per_turn", "operator": "<", "value": 3, "severity": "blocking", "visible_in_game": "顶部信仰收入"}
+  ],
+  "transition_conditions": [{"description": "如果宗教压力不足但信仰很高，可转信仰购买、自然学家或伟人路线。", "trigger": "faith_high AND religion_pressure_low"}],
+  "common_failure_reasons": ["信仰产出不足却硬追宗教胜利。", "忽视使徒晋升和神学战争。", "没有及时防守对手宗教压力。"],
+  "recommended_game_data": ["faith_per_turn", "faith_balance", "religion_summary", "city_count", "at_war_count"],
+  "player_explanation_template": "宗教流主要看信仰收入、圣地规模、宗教单位节奏和对手宗教压力。",
+  "confidence": "medium",
+  "source": {"type": "project_seed", "status": "rule_checked"}
+}

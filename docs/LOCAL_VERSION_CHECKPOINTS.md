@@ -4,6 +4,28 @@
 
 ## 当前版本
 
+### v0.5.0-dev-expanded-consul
+
+- 状态：本地 dev tag 版本点，已通过自动测试，待 Windows Civ VI 实机验收。
+- 目标提交：创建 tag 时的本地最新提交。
+- 功能范围：
+  - 本地知识库扩展到 8 个流派：小马流、学院流、大商路流、征服流、宗教流、文化流、工业流、扩张流。
+  - 游戏内 Lua 兜底评分器同步支持 8 个流派。
+  - Python Consul 新增玩家回答编排层。
+  - Python Consul 新增 `ai-context` 输出，用于后续大模型回答。
+  - Python Consul 新增本地 HTTP 服务 `/health` 和 `/answer`。
+- 回退方式：
+
+```powershell
+git checkout v0.5.0-dev-expanded-consul
+```
+
+如需把当前分支强制回退到该版本：
+
+```powershell
+git reset --hard v0.5.0-dev-expanded-consul
+```
+
 ### v0.4.0-local-strategy-loop
 
 - 状态：本地 tag 版本点。

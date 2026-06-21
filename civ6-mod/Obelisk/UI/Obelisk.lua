@@ -1645,11 +1645,86 @@ local function ScoreTradeRouteFlow(snapshot:table)
   return FinalizeFlowScore(flow);
 end
 
+local function ScoreConquestFlow(snapshot:table)
+  local flow:table = NewFlowScore("conquest", "征服流", "通过军事窗口夺城并转化为节奏优势");
+  local strategicTotal:number = (snapshot.horseCount or 0) + (snapshot.ironCount or 0);
+
+  AddFlowCondition(flow, (snapshot.majorContacts or 0) >= 1, 20, "已见主要文明目标", "还没有明确主要文明目标", "外交面板 / 已见文明", true);
+  AddFlowCondition(flow, (snapshot.militaryStrength or 0) >= 120, 25, "军力具备压制基础", "军力不足，强行征服风险高", "外交界面 / 军力对比", true);
+  AddFlowCondition(flow, (snapshot.goldPerTurn or 0) >= 5, 15, "金币能支撑维护和升级", "金币收入偏低，维护和升级会拖垮节奏", "顶部金币收入", false);
+  AddFlowCondition(flow, strategicTotal > 0, 15, "有战略资源支撑单位线", "缺少马/铁等战略资源", "资源栏 / 战略资源", false);
+  AddFlowCondition(flow, (snapshot.cityCount or 0) >= 2, 10, "城市数能承接军事生产", "城市太少，持续战争承载不足", "城市数量", false);
+
+  table.insert(flow.checks, "目标城市：是否有城墙、驻军和忠诚压力");
+  table.insert(flow.checks, "科技树：攻城单位或关键军事科技是否接近");
+  return FinalizeFlowScore(flow);
+end
+
+local function ScoreReligionFlow(snapshot:table)
+  local flow:table = NewFlowScore("religion", "宗教流", "用信仰收入和宗教单位推进宗教胜利或信仰经济");
+
+  AddFlowCondition(flow, (snapshot.faithPerTurn or 0) >= 6, 25, "信仰收入具备启动基础", "信仰收入不足，宗教单位节奏会很慢", "顶部信仰收入", true);
+  AddFlowCondition(flow, (snapshot.cityCount or 0) >= 2, 15, "城市数量能承载圣地和传教", "城市太少，圣地和传教压力不足", "城市数量", false);
+  AddFlowCondition(flow, (snapshot.atWarCount or 0) == 0, 10, "没有被战争打断宗教节奏", "战争压力会压低宗教优先级", "外交面板 / 战争状态", false);
+  AddFlowCondition(flow, (snapshot.faithPerTurn or 0) < 40, 10, "信仰仍有放大空间", "信仰已较高，应检查是否转化为单位或经济", "顶部信仰收入", false);
+
+  table.insert(flow.checks, "宗教界面：是否已创教、信条是否支持当前路线");
+  table.insert(flow.checks, "城市：哪些城市能补圣地或信仰建筑");
+  return FinalizeFlowScore(flow);
+end
+
+local function ScoreCultureFlow(snapshot:table)
+  local flow:table = NewFlowScore("culture", "文化流", "用文化、旅游、伟人、奇观和国土吸引力推进文化优势");
+  local supportEconomy:boolean = (snapshot.goldPerTurn or 0) >= 10 or (snapshot.faithPerTurn or 0) >= 10;
+
+  AddFlowCondition(flow, (snapshot.culture or 0) >= 10, 20, "文化收入具备市政节奏", "文化收入偏低，政策和旅游体系启动慢", "顶部文化收入", true);
+  AddFlowCondition(flow, (snapshot.cityCount or 0) >= 3, 20, "城市数能承载剧院、奇观或国家公园规划", "城市数偏少，文化组件承载不足", "城市数量", false);
+  AddFlowCondition(flow, snapshot.tourism == nil or snapshot.tourism < 100, 10, "旅游仍有成长空间", "旅游已进入兑现阶段，应看胜利面板差距", "文化胜利面板 / 旅游", false);
+  AddFlowCondition(flow, (snapshot.atWarCount or 0) == 0, 10, "没有战争打断文化建设", "战争会压低文化建设优先级", "外交面板 / 战争状态", false);
+  AddFlowCondition(flow, supportEconomy, 10, "金币或信仰能支撑后续文化组件", "金币/信仰支撑不足", "顶部金币/信仰", false);
+
+  table.insert(flow.checks, "文化胜利面板：国内游客、国际游客和旅游");
+  table.insert(flow.checks, "城市规划：剧院、奇观、国家公园和海滨度假区位置");
+  return FinalizeFlowScore(flow);
+end
+
+local function ScoreIndustryFlow(snapshot:table)
+  local flow:table = NewFlowScore("industry", "工业流", "用工业区和生产力把科技、军事或胜利项目转化为执行力");
+
+  AddFlowCondition(flow, (snapshot.cityCount or 0) >= 3, 20, "城市数能铺开工业规划", "城市太少，工业区规模不足", "城市数量", true);
+  AddFlowCondition(flow, (snapshot.averageCityProduction or 0) >= 7, 25, "平均产能达到工业规划基础", "平均产能偏低，工业区会建得太慢", "城市生产力 / 建造回合", true);
+  AddFlowCondition(flow, (snapshot.turn or 0) >= 45, 10, "已进入可规划工业的阶段", "时间偏早，可能应先扩张或补基础设施", "当前回合", false);
+  AddFlowCondition(flow, (snapshot.goldPerTurn or 0) >= 0, 10, "金币没有拖累维护", "金币赤字会拖累区域和建筑维护", "顶部金币收入", false);
+
+  table.insert(flow.checks, "城市：哪几座城能成为生产核心");
+  table.insert(flow.checks, "科技树：工业区、工坊、电厂相关科技进度");
+  return FinalizeFlowScore(flow);
+end
+
+local function ScoreExpansionFlow(snapshot:table)
+  local flow:table = NewFlowScore("expansion", "扩张流", "通过移民和新城扩大基础盘，承载后续路线");
+
+  AddFlowCondition(flow, (snapshot.cityCount or 0) < 6, 25, "城市数量仍有扩张收益", "城市数已较高，继续扩张需看质量", "城市数量", false);
+  AddFlowCondition(flow, (snapshot.expansionCandidateCount or 0) > 0, 20, "可见范围有扩张候选", "可见扩张空间不足", "地图可见地块 / 推荐城址", false);
+  AddFlowCondition(flow, (snapshot.turn or 0) < 120, 15, "仍处在扩张收益较高阶段", "回合偏晚，扩张回本变慢", "当前回合", false);
+  AddFlowCondition(flow, (snapshot.averageCityProduction or 0) >= 4, 10, "产能可承担移民/工人机会成本", "产能偏低，移民会拖慢核心建设", "城市生产力", false);
+  AddFlowCondition(flow, (snapshot.atWarCount or 0) == 0, 10, "没有战争迫使全力转军事", "战争压力下移民安全性下降", "外交面板 / 战争状态", false);
+
+  table.insert(flow.checks, "地图：水源、奢侈、战略资源、忠诚压力");
+  table.insert(flow.checks, "城市：生产移民是否会拖慢关键区域或军队");
+  return FinalizeFlowScore(flow);
+end
+
 local function ScoreAllFlows(snapshot:table)
   local flows:table = {
     ScoreXiaomaFlow(snapshot),
     ScoreCampusFlow(snapshot),
-    ScoreTradeRouteFlow(snapshot)
+    ScoreTradeRouteFlow(snapshot),
+    ScoreConquestFlow(snapshot),
+    ScoreReligionFlow(snapshot),
+    ScoreCultureFlow(snapshot),
+    ScoreIndustryFlow(snapshot),
+    ScoreExpansionFlow(snapshot)
   };
 
   table.sort(flows, function(left:table, right:table) return left.score > right.score; end);
@@ -1710,7 +1785,7 @@ local function BuildQuestionAnswer(snapshot:table, isChinese:boolean, question:s
   local query:string = question or "";
 
   if isChinese then
-    if TextContainsAny(query, { "更适合", "哪个流派", "流派排序", "小马流还是", "学院流还是", "商路流还是" }) then
+    if TextContainsAny(query, { "更适合", "哪个流派", "流派排序", "小马流还是", "学院流还是", "商路流还是", "征服流还是", "文化流还是", "工业流还是" }) then
       return BuildFlowRankingAnswer(snapshot);
     end
 
@@ -1726,6 +1801,26 @@ local function BuildQuestionAnswer(snapshot:table, isChinese:boolean, question:s
       return BuildFlowAnswer(ScoreTradeRouteFlow(snapshot));
     end
 
+    if TextContainsAny(query, { "征服", "战争", "军事", "打仗" }) then
+      return BuildFlowAnswer(ScoreConquestFlow(snapshot));
+    end
+
+    if TextContainsAny(query, { "宗教", "信仰" }) then
+      return BuildFlowAnswer(ScoreReligionFlow(snapshot));
+    end
+
+    if TextContainsAny(query, { "文化", "旅游" }) then
+      return BuildFlowAnswer(ScoreCultureFlow(snapshot));
+    end
+
+    if TextContainsAny(query, { "工业", "生产", "产能" }) then
+      return BuildFlowAnswer(ScoreIndustryFlow(snapshot));
+    end
+
+    if TextContainsAny(query, { "扩张", "铺城", "移民", "新城" }) then
+      return BuildFlowAnswer(ScoreExpansionFlow(snapshot));
+    end
+
     if TextContainsAny(query, { "适合", "该干嘛", "关注", "下一步", "建议", "现在做什么" }) then
       return BuildNextStepAnswer(snapshot);
     end
@@ -1735,8 +1830,9 @@ local function BuildQuestionAnswer(snapshot:table, isChinese:boolean, question:s
       "1. 我现在适合玩小马流吗？[NEWLINE]" ..
       "2. 我现在适合学院流吗？[NEWLINE]" ..
       "3. 我现在适合大商路流吗？[NEWLINE]" ..
-      "4. 我现在更适合小马流还是学院流？[NEWLINE]" ..
-      "5. 我下一步应该关注什么？";
+      "4. 我现在适合征服流/文化流/工业流/扩张流吗？[NEWLINE]" ..
+      "5. 我现在更适合小马流还是学院流？[NEWLINE]" ..
+      "6. 我下一步应该关注什么？";
   end
 
   if TextContainsAny(string.lower(query), { "horse", "cavalry" }) then
@@ -1749,6 +1845,26 @@ local function BuildQuestionAnswer(snapshot:table, isChinese:boolean, question:s
 
   if TextContainsAny(string.lower(query), { "trade", "merchant" }) then
     return BuildFlowAnswer(ScoreTradeRouteFlow(snapshot));
+  end
+
+  if TextContainsAny(string.lower(query), { "conquest", "war", "domination" }) then
+    return BuildFlowAnswer(ScoreConquestFlow(snapshot));
+  end
+
+  if TextContainsAny(string.lower(query), { "religion", "faith" }) then
+    return BuildFlowAnswer(ScoreReligionFlow(snapshot));
+  end
+
+  if TextContainsAny(string.lower(query), { "culture", "tourism" }) then
+    return BuildFlowAnswer(ScoreCultureFlow(snapshot));
+  end
+
+  if TextContainsAny(string.lower(query), { "industry", "production" }) then
+    return BuildFlowAnswer(ScoreIndustryFlow(snapshot));
+  end
+
+  if TextContainsAny(string.lower(query), { "expansion", "settler" }) then
+    return BuildFlowAnswer(ScoreExpansionFlow(snapshot));
   end
 
   return "This build uses the local knowledge matcher, not a large model yet.[NEWLINE]" ..

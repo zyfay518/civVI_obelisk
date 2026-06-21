@@ -1,0 +1,28 @@
+﻿{
+  "id": "meta_industry_flow",
+  "name": "工业流",
+  "type": "strategy_flow",
+  "core_goal": "通过工业区、生产力和项目能力把科技、军事或胜利项目转化为执行力。",
+  "applicable_civilizations": ["Germany", "Japan", "Gaul", "Any"],
+  "applicable_leaders": ["Any"],
+  "applicable_maps": ["Any"],
+  "victory_targets": ["Science", "Domination", "General"],
+  "key_prerequisites": [
+    {"id": "city_base", "description": "有足够城市铺开工业区或生产核心", "state_key": "city_count", "operator": ">=", "value": 3, "weight": 20, "required": true, "visible_in_game": "城市数量"},
+    {"id": "production_base", "description": "平均城市生产力达到区域建设基础", "state_key": "average_city_production", "operator": ">=", "value": 7, "weight": 25, "required": true, "visible_in_game": "城市生产力 / 当前建造回合"}
+  ],
+  "state_match_conditions": [
+    {"id": "science_or_general", "description": "科技或通用路线需要生产力兑现", "state_key": "desired_victory", "operator": "in", "value": ["Science", "Domination", "General", "科技", "征服", "通用"], "weight": 15, "visible_in_game": "玩家目标 / 胜利路线判断"},
+    {"id": "not_too_early", "description": "已具备进入工业规划的基础局面", "state_key": "turn", "operator": ">=", "value": 45, "weight": 10, "visible_in_game": "当前回合"},
+    {"id": "economy_support", "description": "金币没有拖累区域和建筑维护", "state_key": "gold_per_turn", "operator": ">=", "value": 0, "weight": 10, "visible_in_game": "顶部金币收入"}
+  ],
+  "bad_fit_conditions": [
+    {"id": "low_production", "description": "平均产能偏低，工业区本身会建得太慢。", "state_key": "average_city_production", "operator": "<", "value": 5, "severity": "blocking", "visible_in_game": "城市生产力"}
+  ],
+  "transition_conditions": [{"description": "如果产能不足，应先补改良、商路或工人，而不是硬铺工业区。", "trigger": "production_low"}],
+  "common_failure_reasons": ["工业区建得太晚。", "没有用商路/工人/政策补产能。", "只堆产能但没有明确科技、军事或胜利项目出口。"],
+  "recommended_game_data": ["average_city_production", "city_count", "current_tech", "gold_per_turn", "district_count"],
+  "player_explanation_template": "工业流主要看城市规模、生产力、工业区时机和后续项目出口。",
+  "confidence": "medium",
+  "source": {"type": "project_seed", "status": "rule_checked"}
+}

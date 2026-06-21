@@ -1,0 +1,29 @@
+﻿{
+  "id": "meta_conquest_flow",
+  "name": "征服流",
+  "type": "strategy_flow",
+  "core_goal": "通过持续军事优势夺取城市、削弱竞争者，并把战果转化为经济和胜利进度。",
+  "applicable_civilizations": ["Macedon", "Mongolia", "Aztec", "Gran Colombia", "Any"],
+  "applicable_leaders": ["Any"],
+  "applicable_maps": ["Pangaea", "Continents", "Default"],
+  "victory_targets": ["Domination", "Tempo Advantage"],
+  "key_prerequisites": [
+    {"id": "has_target", "description": "已遇见可评估的主要文明目标", "state_key": "major_contacts", "operator": ">=", "value": 1, "weight": 20, "required": true, "visible_in_game": "外交面板 / 已见文明"},
+    {"id": "military_base", "description": "军力具备进攻或压制基础", "state_key": "military_strength", "operator": ">=", "value": 120, "weight": 25, "required": true, "visible_in_game": "外交界面 / 军力对比"}
+  ],
+  "state_match_conditions": [
+    {"id": "gold_support", "description": "金币收入能支撑维护、升级和买关键单位", "state_key": "gold_per_turn", "operator": ">=", "value": 5, "weight": 15, "visible_in_game": "顶部金币收入"},
+    {"id": "strategic_resource", "description": "有马或铁等战略资源支撑单位升级线", "state_key": "resources.strategic_total", "operator": ">", "value": 0, "weight": 15, "visible_in_game": "资源栏 / 战略资源"},
+    {"id": "not_tiny_empire", "description": "至少有两座城市承接军事生产和战后整合", "state_key": "city_count", "operator": ">=", "value": 2, "weight": 10, "visible_in_game": "城市数量"}
+  ],
+  "bad_fit_conditions": [
+    {"id": "weak_military", "description": "军力明显不足，强行征服容易亏节奏。", "state_key": "military_strength", "operator": "<", "value": 90, "severity": "blocking", "visible_in_game": "外交界面 / 军力对比"},
+    {"id": "negative_gold", "description": "金币赤字会拖垮维护和升级。", "state_key": "gold_per_turn", "operator": "<", "value": 0, "severity": "warning", "visible_in_game": "顶部金币收入"}
+  ],
+  "transition_conditions": [{"description": "如果攻城窗口受城墙或科技代差阻挡，应转向经济、学院或工业补执行力。", "trigger": "enemy_walls OR tech_gap"}],
+  "common_failure_reasons": ["只造兵不补经济。", "没有攻城手段就硬打有墙城市。", "占城后忠诚、宜居度和维护崩盘。"],
+  "recommended_game_data": ["military_strength", "gold_per_turn", "resources.horses", "resources.iron", "major_contacts", "at_war_count"],
+  "player_explanation_template": "征服流主要看军力窗口、金币维护、战略资源、目标距离和对手防御。",
+  "confidence": "medium",
+  "source": {"type": "project_seed", "status": "rule_checked"}
+}

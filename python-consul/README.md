@@ -47,4 +47,27 @@ py -m obelisk_knowledge.cli --knowledge-root knowledge --state path\to\obelisk_s
 
 Current mapping is deterministic and local. Horse/iron detection from `resourceSamples` is heuristic until Lua Beacon emits normalized resource counts.
 
+Local service:
+
+```powershell
+$env:PYTHONPATH='python-consul'
+py -m obelisk_knowledge.local_service --knowledge-root knowledge --host 127.0.0.1 --port 8765
+```
+
+Request:
+
+```json
+{
+  "question": "我现在更适合哪个流派？",
+  "state_format": "obelisk",
+  "state": {}
+}
+```
+
+Supported outputs:
+
+- `answer`: deterministic player-facing answer.
+- `raw`: raw matcher result.
+- `ai-context`: prompt-ready context bundle for a future model layer.
+
 The output is structured JSON and can later be passed to an AI response layer.
