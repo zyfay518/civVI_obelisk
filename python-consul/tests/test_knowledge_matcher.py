@@ -6,6 +6,7 @@ from pathlib import Path
 
 from obelisk_knowledge.loader import load_knowledge_base
 from obelisk_knowledge.query_service import QueryService
+from obelisk_knowledge.state_mapper import map_obelisk_snapshot_to_state
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -53,6 +54,65 @@ class KnowledgeMatcherTests(unittest.TestCase):
         result = self.service.answer("我现在更适合哪个流派？", load_state("campus_state.json"))
         self.assertEqual(result["mode"], "flow_ranking")
         self.assertIn("matches", result)
+
+    def test_maps_obelisk_snapshot_to_standard_state(self) -> None:
+        snapshot = {
+            "turn": 48,
+            "eraName": "古典时代",
+            "cityCount": 3,
+            "science": 18,
+            "culture": 12,
+            "goldPerTurn": 9,
+            "militaryStrength": 104,
+            "majorContacts": 2,
+            "minorContacts": 1,
+            "atWarCount": 0,
+            "currentTech": "骑马",
+            "resourceSamples": ["马 2", "铁 0"],
+            "tradeRouteActive": 1,
+            "tradeRouteCapacity": 2,
+            "cities": [
+                {"name": "首都", "yields": {"production": 7}},
+                {"name": "二城", "yields": {"production": 5}},
+            ],
+            "expansionCandidateCount": 4,
+            "borderPressureCount": 1,
+        }
+
+        state = map_obelisk_snapshot_to_state(snapshot)
+
+        self.assertEqual(state["era"], "古典")
+        self.assertEqual(state["city_count"], 3)
+        self.assertEqual(state["resources"]["horses"], 2)
+        self.assertEqual(state["trade_route_unused"], 1)
+        self.assertEqual(state["average_city_production"], 6)
+        self.assertFalse(state["barbarian_or_war_risk"])
+
+    def test_query_service_accepts_mapped_obelisk_snapshot(self) -> None:
+        state = map_obelisk_snapshot_to_state(
+            {
+                "turn": 42,
+                "eraName": "古典时代",
+                "cityCount": 2,
+                "science": 14,
+                "culture": 9,
+                "goldPerTurn": 8,
+                "militaryStrength": 95,
+                "majorContacts": 1,
+                "minorContacts": 1,
+                "atWarCount": 0,
+                "resourceSamples": ["马 1"],
+                "tradeRouteActive": 0,
+                "tradeRouteCapacity": 1,
+                "cities": [{"yields": {"production": 6}}],
+            }
+        )
+
+        result = self.service.answer("我现在适合玩小马流吗？", state)
+
+        self.assertEqual(result["mode"], "single_flow_match")
+        self.assertEqual(result["result"]["meta_id"], "meta_xiaoma_flow")
+        self.assertGreaterEqual(result["result"]["score"], 60)
 
 
 if __name__ == "__main__":

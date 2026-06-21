@@ -100,6 +100,7 @@ Phase 1：后台数据完整性已基本完成，UI 保持紧凑。
 - 进入实战验收 UI 阶段：游戏内界面目标改为“顶部透明提问条 + 下拉对话框”，不再在最终用户界面展示后台数据按钮或数据面板。
 - 修正实战验收 UI：顶部提问条从按钮改为 `EditBox` 输入框，支持打字、回车提交和“发送”按钮提交。
 - Windows Civ VI 实战验收通过：顶部提问条可输入并提交问题，下拉对话框能返回本地规则路由回答；最终 UI 不再展示后台数据按钮或“规则建议”面板。
+- 新增 Obelisk 快照映射层：`python-consul/obelisk_knowledge/state_mapper.py` 可将 Lua Beacon 的 camelCase 快照字段转换为知识库 matcher 的标准 state，覆盖时代、城市数、产出、外交接触、商路、战争风险、马/铁资源和战略地图摘要。
 
 ## Windows 本机安装状态
 
@@ -215,7 +216,7 @@ Windows Civ VI 战略地图评分边界版
 
 ## 下一步
 
-1. 将真实 Lua Beacon 快照字段映射到 `obelisk_knowledge` matcher 所需的标准 state。
+1. 设计本地 Lua UI 与 Python Consul 的调用边界：文件投递、localhost 服务或后续独立伴随进程。
 2. 设计 AI 回答链路：当前快照数据 + 底层规则 + 玩家攻略检索 + 可解释建议。
 3. 后续开始逐批采集网络玩家攻略，并先进入 `knowledge/review/` 做规则校验。
 4. 后续按真实提问暴露的数据缺口继续补专项字段。

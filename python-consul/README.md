@@ -10,7 +10,7 @@ Initial responsibilities:
 - Run local knowledge matching before any AI prompt is built.
 - Return a structured answer for Overlay UI.
 
-The first prototype can use mock snapshots before Lua Beacon is connected.
+The first prototype supports both mock standard states and mapped Obelisk Lua Beacon snapshots.
 
 ## Local Knowledge MVP
 
@@ -20,6 +20,7 @@ The first knowledge system is intentionally lightweight:
 - Standard-library Python dataclasses.
 - Local rule/meta matcher.
 - Simple scoring system.
+- Obelisk snapshot mapper for current Lua field names.
 - No vector database.
 - No large model dependency.
 
@@ -36,5 +37,14 @@ Example CLI:
 $env:PYTHONPATH='python-consul'
 py -m obelisk_knowledge.cli --knowledge-root knowledge --state knowledge/mock_states/early_horse_state.json --question "我现在适合玩小马流吗？"
 ```
+
+Obelisk snapshot CLI:
+
+```powershell
+$env:PYTHONPATH='python-consul'
+py -m obelisk_knowledge.cli --knowledge-root knowledge --state path\to\obelisk_snapshot.json --state-format obelisk --question "我现在适合玩小马流吗？"
+```
+
+Current mapping is deterministic and local. Horse/iron detection from `resourceSamples` is heuristic until Lua Beacon emits normalized resource counts.
 
 The output is structured JSON and can later be passed to an AI response layer.
